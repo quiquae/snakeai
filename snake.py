@@ -37,7 +37,7 @@ class App:
         
         pygame.display.set_caption('Pygame pythonspot.com example')
         self._running = True
-        self._image_surf = pygame.image.load("C:\Users\creag\OneDrive\Pictures\cegg.png").convert()
+        self._image_surf = pygame.image.load("cegg.png").convert()
  
     def on_event(self, event):
         if event.type == QUIT:
