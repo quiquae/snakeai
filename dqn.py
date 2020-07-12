@@ -40,7 +40,7 @@ class dqnagent(object):
             model.load_weights(self.weights)
         return(model)
 
-    def get_state(self,game,player,food): #returns the diferent states of the player
+    def get_state(self,app,player,food): #returns the diferent states of the player
         updanger = False
         downdanger = False
         rightdanger = False
@@ -78,10 +78,10 @@ class dqnagent(object):
             player.direction == 2, #up
             player.direction == 3, #down
 
-            food.x < player.x, #food is to the left of the player
-            food.x > player.x, #food is to the right of the player
-            food.y < player.y, #food is up from the player
-            food.y > player.y #food is down from the player 
+            food.x < player.x[0], #food is to the left of the player
+            food.x > player.x[0], #food is to the right of the player
+            food.y < player.y[0], #food is up from the player
+            food.y > player.y[0] #food is down from the player 
         ]
         for i in range(len(state)): #convert list to 0s and 1s
             if(state[i]):

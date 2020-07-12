@@ -3,6 +3,7 @@ from random import randint
 import pygame
 import time
 from dqn import dqnagent
+
  
 def parameters():
     params = dict()
@@ -76,13 +77,13 @@ class Player:
             self.updateCount = 0
  
     def do_move(self,action):
-        if(action[0]==1):
+        if(action==0):
             moveUp()
-        elif(action[1]==1):
+        elif(action==1):
             moveDown()
-        elif(action[2]==1):
+        elif(action==2):
             moveLeft()
-        elif(action[3]==1):
+        elif(action==3):
             moveRight()
 
     def moveRight(self):
@@ -177,9 +178,10 @@ class App:
 
     def on_execute(self):
         print('starting execution!')
-        agent = dqnagent(parameters()) #initialize the agent!
-        if(params['load_weights']): #load weights maybe
-            agent.model.load_weights(params['weights_path'])
+        params = parameters()
+        agent = dqnagent(params) #initialize the agent!
+        if(agent.load_weights): #load weights maybe
+            agent.model.load_weights(agent.weights)
             print("loaded the weights")
 
         counter = 0 #how many games have been played/trials done
@@ -190,7 +192,7 @@ class App:
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
-                agent.epilson = 1- (counter_games * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+                agent.epilson = 1- (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
 
             if self.on_init() == False:
@@ -198,16 +200,20 @@ class App:
 
             while( self._running ):
                 pygame.event.pump()
-                oldstate = agent.get_state(self.game, self.player,self.food)
+                oldstate = agent.get_state(self, self.player,self.apple)
                 # get the action
                 if randint(0,1)<agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
+                    print(action)
                 else: #Actionprecited by agent
-                    predictedq= agent.model.predict(oldstate.reshape((1,12))) # predicts the q values for the action in that state
+                    #oldstate = oldstate.reshape(1,12)
+                    predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
+                    print(predictedq)
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
-                
+                    print(action)
+
                 self.player.do_move(action) #do the action
-                newstate = agent.get_state(self.game, self.player, self.food) #new state from the action we've taken
+                newstate = agent.get_state(self.game, self.player, self.apple) #new state from the action we've taken
 
                 self.on_loop()
                 self.on_render()
