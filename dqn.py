@@ -29,7 +29,7 @@ class dqnagent(object):
 
     def network (self): #building the neural network
         model = Sequential() #layers all in sequential line?
-        model.add(Dense(output_dim = self.first_layer, activation='relu', input_dim=11)) #first layer on model, 11 inputs, ReLu activation
+        model.add(Dense(output_dim = self.first_layer, activation='relu', input_dim=12)) #first layer on model, 12 inputs, ReLu activation
         model.add(Dense(output_dim=self.second_layer, activation = 'relu')) #second layer
         model.add(Dense(output_dim = self.third_layer, activation='relu')) #thirdlayer
         model.add(Dense(output_dim = 3, activation='softmax')) # last layer- 3 outputs, softmax activation
@@ -41,8 +41,37 @@ class dqnagent(object):
         return(model)
 
     def get_state(self,game,player,food): #returns the diferent states of the player
+        updanger = False
+        downdanger = False
+        rightdanger = False
+        leftdanger = False    
+        for i in range(1,player.length):
+            if(player.x[0]==player.x[i]):
+                # if the head and part of body going to collide vertically
+                if(player.y[0]==(player.y[i]+player.step)):
+                    downdanger = True
+                if(player.y[0]==(player.y[i]-player.step)):
+                    updanger = True
+            if(player.y[0]==player.y[i]):
+                # if the head and part of body going to collide horizontally
+                if(player.x[0]==(player.x[i]+player.step)):
+                    leftdanger = True
+                if(player.x[0]==(player.x[i]-player.step)):
+                    rightdanger = True
+        if(player.y[0]==player.step): #bang downwards
+            downdanger = True
+        if(player.y[0]==(app.windowHeight-player.step)): #bang upwards
+            updanger = True
+        if(player.x[0]==player.step): #bang left
+            leftdanger = True
+        if(player.x[0]==(app.windowWidth-player.step)): #bang rightwards
+            rightdanger = True
         state = [
-            ## other 3 danger ones
+            ## detecting whether there's a blockage/danger in all ofthe directions
+            updanger,
+            downdanger,
+            leftdanger,
+            rightdanger,
 
             player.direction == 0, #right
             player.direction == 1, #left
@@ -50,8 +79,8 @@ class dqnagent(object):
             player.direction == 3, #down
 
             food.x < player.x, #food is to the left of the player
-            food.x > player.x #food is to the right of the player
-            food.y < player.y #food is up from the player
+            food.x > player.x, #food is to the right of the player
+            food.y < player.y, #food is up from the player
             food.y > player.y #food is down from the player 
         ]
         for i in range(len(state)): #convert list to 0s and 1s
@@ -73,5 +102,25 @@ class dqnagent(object):
     def remember(self,state,action,reward,next_state,done): #recording your state, action, reward, next state etc - log of the different gameplay
         self.memory.append((state,action,reward,next_state,done))
 
-    def replay_new(self,memory,batch_size):
-        
+    def replay_new(self,memory,batch_size): #replaying small chunks of the game history to train the model
+        if len(memory) > batch_size: #more memory than size of bath
+            minibatch = random.sample (memory, batch_size) #small randomly sampled batch
+        else:
+            minibatch = memory #batch too big so gets all of the memory
+        for state, action, reward, next_state, done in minibatch: 
+            target = reward #target is the estimation of the correct q-value
+            # sets the target equal to reward or estimation of what that is if game isn't finished
+            if not done:
+                target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
+            target_f = self.model.predict(np.array([state])) 
+            target_f[0][np.argmax(action)] = target
+            self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1)
+
+    def train_short_memory(self,state,a): #training online after each decision straightaway? vs the long-term batch sampling
+        target = reward #target is the estimation of the correct q-value
+            # sets the target equal to reward or estimation of what that is if game isn't finished
+        if not done:
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,11)))[0])
+        target_f = self.model.predict(np.array([state])) 
+        target_f[0][np.argmax(action)] = target
+        self.model.fit (state.reshape((1,11)), target_f, epochs=1, verbose = 1)

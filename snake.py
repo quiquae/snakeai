@@ -2,7 +2,24 @@ from pygame.locals import *
 from random import randint
 import pygame
 import time
+from dqn import dqnagent
  
+def parameters():
+    params = dict()
+    params['epsilon_decay_linear'] = 1/175 #how much we decrease our exploration by every time
+    params['learning_rate'] = 0.0005
+    params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
+    params['second_layer_size'] = 150
+    params['third_layer_size'] = 150
+    params['episodes'] = 150 #how many trials you do ie played games
+    params['memory_size'] = 2500
+    params['batch_size'] = 500
+    params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
+    params['load_weights'] = False
+    params['train'] = True
+    return(params)
+     
+ #-----------------------
 class Apple:
     x = 0
     y = 0
@@ -58,7 +75,16 @@ class Player:
  
             self.updateCount = 0
  
- 
+    def do_move(self,action):
+        if(action[0]==1):
+            moveUp()
+        elif(action[1]==1):
+            moveDown()
+        elif(action[2]==1):
+            moveLeft()
+        elif(action[3]==1):
+            moveRight()
+
     def moveRight(self):
         self.direction = 0
  
@@ -106,12 +132,14 @@ class App:
         self._running = True
         self._image_surf = pygame.image.load("pink.png").convert()
         self._apple_surf = pygame.image.load("pink.png").convert()
+        print('initialized game.')
  
     def on_event(self, event):
         if event.type == QUIT:
             self._running = False
  
     def on_loop(self):
+        print('started loop')
         self.player.update()
  
         # does snake eat apple?
@@ -129,7 +157,7 @@ class App:
                 print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
                 print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
                 exit(0)
- 
+        print ('end pf lop')
         pass
  
     def on_render(self):
@@ -141,35 +169,57 @@ class App:
     def on_cleanup(self):
         pygame.quit()
  
+    # initializing the agent before the first move?
+    def init_agent(self, agent, player, game, food, batch_size):
+        state_init1 = agent.get_state(game,player,food) #first state after random placement
+        #first action
+        player.do_move
+
     def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
- 
-        while( self._running ):
-            pygame.event.pump()
-            keys = pygame.key.get_pressed() 
- 
-            if (keys[K_RIGHT]):
-                self.player.moveRight()
- 
-            if (keys[K_LEFT]):
-                self.player.moveLeft()
- 
-            if (keys[K_UP]):
-                self.player.moveUp()
- 
-            if (keys[K_DOWN]):
-                self.player.moveDown()
- 
-            if (keys[K_ESCAPE]):
+        print('starting execution!')
+        agent = dqnagent(parameters()) #initialize the agent!
+        if(params['load_weights']): #load weights maybe
+            agent.model.load_weights(params['weights_path'])
+            print("loaded the weights")
+
+        counter = 0 #how many games have been played/trials done
+        record = 0 #highest score
+        while counter<params['episodes']: #still have more trials to do
+            
+
+            if not params['train']: # if you're not training it, no need for exploration
+                agent.epsilon = 0
+            else:
+                agent.epilson = 1- (counter_games * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+
+
+            if self.on_init() == False:
                 self._running = False
- 
-            self.on_loop()
-            self.on_render()
- 
-            time.sleep (50.0 / 1000.0);
-        self.on_cleanup()
+
+            while( self._running ):
+                pygame.event.pump()
+                oldstate = agent.get_state(self.game, self.player,self.food)
+                # get the action
+                if randint(0,1)<agent.epsilon: #every so often random exploration
+                    action = randint(0,3) #random action
+                else: #Actionprecited by agent
+                    predictedq= agent.model.predict(oldstate.reshape((1,12))) # predicts the q values for the action in that state
+                    action = np.argmax(predictedq[0]) #maximum (highest q) action
+                
+                self.player.do_move(action) #do the action
+                newstate = agent.get_state(self.game, self.player, self.food) #new state from the action we've taken
+
+                self.on_loop()
+                self.on_render()
+    
+                time.sleep (50.0 / 1000.0)
+            self.on_cleanup()
  
 if __name__ == "__main__" :
+    print('we got to main')
     theApp = App()
+    print('about to execute')
     theApp.on_execute()
+    
+
+
