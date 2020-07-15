@@ -3,7 +3,7 @@ from random import randint
 import pygame
 import time
 from dqn import dqnagent
-
+import numpy as np
  
 def parameters():
     params = dict()
@@ -46,7 +46,7 @@ class Player:
  
     def __init__(self, length):
        self.length = length
-       for i in range(0,2000):
+       for i in range(1000):
            self.x.append(-100)
            self.y.append(-100)
  
@@ -55,7 +55,8 @@ class Player:
        self.x[2] = 2*44
  
     def update(self):
- 
+        print("x=",self.x[:self.length])
+        print("y=",self.y[:self.length])
         self.updateCount = self.updateCount + 1
         if self.updateCount > self.updateCountMax:
  
@@ -77,26 +78,8 @@ class Player:
             self.updateCount = 0
  
     def do_move(self,action):
-        if(action==0):
-            moveUp()
-        elif(action==1):
-            moveDown()
-        elif(action==2):
-            moveLeft()
-        elif(action==3):
-            moveRight()
-
-    def moveRight(self):
-        self.direction = 0
- 
-    def moveLeft(self):
-        self.direction = 1
- 
-    def moveUp(self):
-        self.direction = 2
- 
-    def moveDown(self):
-        self.direction = 3 
+        self.direction = action
+        
  
     def draw(self, surface, image):
         for i in range(0,self.length):
@@ -142,7 +125,7 @@ class App:
     def on_loop(self):
         print('started loop')
         self.player.update()
- 
+        print("LENGTH=",self.player.length)
         # does snake eat apple?
         for i in range(0,self.player.length):
             if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],44):
@@ -150,7 +133,7 @@ class App:
                 self.apple.y = randint(2,9) * 44
                 self.player.length = self.player.length + 1
  
- 
+        print("length=",self.player.length)
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],40):
@@ -158,7 +141,7 @@ class App:
                 print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
                 print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
                 exit(0)
-        print ('end pf lop')
+        print ('end of loop')
         pass
  
     def on_render(self):
@@ -204,16 +187,16 @@ class App:
                 # get the action
                 if randint(0,1)<agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
-                    print(action)
+                    print("random action= ",action)
                 else: #Actionprecited by agent
-                    #oldstate = oldstate.reshape(1,12)
+                    oldstate = oldstate.reshape(1,12)
                     predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
-                    print(predictedq)
+                    print("predicted q-value for action= ",predictedq)
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
-                    print(action)
+                    print("predicted action= ",action)
 
                 self.player.do_move(action) #do the action
-                newstate = agent.get_state(self.game, self.player, self.apple) #new state from the action we've taken
+                newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
 
                 self.on_loop()
                 self.on_render()

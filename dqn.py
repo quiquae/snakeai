@@ -25,14 +25,14 @@ class dqnagent(object):
         self.memory = collections.deque(maxlen=params['memory_size']) #stack/queue effecient storing memory- faster than a list!
         self.weights = params['weights_path'] #weights
         self.load_weights = params['load_weights']
-        self.model = self.network ## the network
+        self.model = self.network() ## the network
 
     def network (self): #building the neural network
         model = Sequential() #layers all in sequential line?
-        model.add(Dense(output_dim = self.first_layer, activation='relu', input_dim=12)) #first layer on model, 12 inputs, ReLu activation
-        model.add(Dense(output_dim=self.second_layer, activation = 'relu')) #second layer
-        model.add(Dense(output_dim = self.third_layer, activation='relu')) #thirdlayer
-        model.add(Dense(output_dim = 3, activation='softmax')) # last layer- 3 outputs, softmax activation
+        model.add(Dense(units = self.first_layer, activation='relu', input_dim=12)) #first layer on model, 12 inputs, ReLu activation
+        model.add(Dense(units=self.second_layer, activation = 'relu')) #second layer
+        model.add(Dense(units = self.third_layer, activation='relu')) #thirdlayer
+        model.add(Dense(units = 3, activation='softmax')) # last layer- 3 outputs, softmax activation
         
         opt = Adam(self.learning_rate) #optimization to find minimum loss point
         model.compile(loss='mse',optimizer=opt) #compile model- mean squared error for difference between target and output averaged across different outputs squared
