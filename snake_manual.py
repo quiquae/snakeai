@@ -26,10 +26,36 @@ class Player:
     updateCountMax = 2
     updateCount = 0
  
-    def __init__(self, length):
+    def __init__(self, length, xDim, yDim):
         self.length = length #not using random yet
-        self.x.append(4*self.step)
-        self.y.append(0)
+        self.direction = randint(0,3)
+        print(self.direction)
+        # random snake position dependent on the initial direction
+        if(self.direction==0):
+            self.x.append(randint(5,xDim)*self.step)
+            self.y.append(0)
+            for i in range(1,length):
+                self.x.append(self.x[i-1]-self.step)
+                self.y.append(self.y[0])
+        elif(self.direction==1):
+            self.x.append(randint(0,xDim-5)*self.step)
+            self.y.append(0)
+            for i in range(1,length):
+                self.x.append(self.x[i-1]+self.step)
+                self.y.append(self.y[0])
+        elif(self.direction==2):
+            self.y.append(randint(5,yDim)*self.step)
+            self.x.append(0)
+            for i in range(1,length):
+                self.y.append(self.y[i-1]+self.step)
+                self.x.append(self.x[0])
+        else:
+            self.y.append(randint(0,yDim-5)*self.step)
+            self.x.append(0)
+            for i in range(1,length):
+                self.y.append(self.y[i-1]-self.step)
+                self.x.append(self.x[0])
+
         for i in range(1,length):
             self.x.append(self.x[i-1]-self.step)
             self.y.append(self.y[0])
@@ -57,8 +83,6 @@ class Player:
                 self.y[0] -= self.step
             if self.direction == 3:
                 self.y[0] += self.step
-            print(self.x)
-            print(self.y)
             self.updateCount = 0
  
     # moving in dfferent directions
@@ -93,6 +117,8 @@ class Game:
  
 class App:
  
+    windowDimY = 14
+    windowDimX = 18
     windowWidth = 0
     windowHeight = 0
     player = 0
@@ -104,9 +130,9 @@ class App:
         self._image_surf = None
         self._apple_surf = None
         self.game = Game()
-        self.player = Player(3) 
-        self.windowWidth = 18*self.player.step
-        self.windowHeight = 14*self.player.step
+        self.player = Player(3,self.windowDimX, self.windowDimY) 
+        self.windowWidth = self.windowDimX*self.player.step
+        self.windowHeight = self.windowDimY*self.player.step
         self.apple = Apple(5,5)
  
     def on_init(self):
@@ -136,8 +162,8 @@ class App:
         # does snake eat apple?
         for i in range(0,self.player.length):
             if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step):
-                self.apple.x = randint(2,9) * self.player.step
-                self.apple.y = randint(2,9) * self.player.step
+                self.apple.x = randint(0,self.windowDimX) * self.player.step
+                self.apple.y = randint(0,self.windowDimY) * self.player.step
                 self.player.length = self.player.length + 1
                 self.player.x.append(self.player.x[-1])
                 self.player.y.append(self.player.y[-1])
