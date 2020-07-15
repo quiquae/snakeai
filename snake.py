@@ -56,7 +56,7 @@ class Player:
  
     def update(self):
         print("x=",self.x[:self.length])
-        print("y=",self.y[:self.length])
+        print("y=",self.y[:self.length2])
         self.updateCount = self.updateCount + 1
         if self.updateCount > self.updateCountMax:
  
