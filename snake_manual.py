@@ -1,3 +1,10 @@
+# problems to fix:
+# initialized length is 5?
+# apple disappears
+# when snake on left or top of apple can eat it without being on it directly?
+# if starting game on length 3 only crashes on wall if you have 2 blocks on game board- should crash directly on the 1st block that touches wall
+# you can't go back into yourself to die
+
 from pygame.locals import *
 from random import randint
 import pygame
@@ -145,8 +152,8 @@ class App:
  
         pygame.display.set_caption('Pygame Snake game!')
         self._running = True
-        self._image_surf = pygame.image.load("smake.png").convert()
-        self._apple_surf = pygame.image.load("smapple.png").convert()
+        self._image_surf = pygame.image.load("images/smake.png").convert()
+        self._apple_surf = pygame.image.load("images/smapple.png").convert()
  
     def on_event(self, event):
         if event.type == QUIT:
