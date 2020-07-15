@@ -22,7 +22,7 @@ class Player:
     step = 44
     direction = 0
     length = 3 
- 
+    eatenApple = False
     updateCountMax = 2
     updateCount = 0
  
@@ -68,7 +68,11 @@ class Player:
  
         self.updateCount = self.updateCount + 1
         if self.updateCount > self.updateCountMax: #don't want it to update many times based on 1 action/key press
- 
+            if(self.eatenApple):
+                self.length = self.length + 1
+                self.x.append(self.x[-1])
+                self.y.append(self.y[-1])
+                self.eatenApple = False
             # update position to be the previouis one
             for i in range(self.length-1,0,-1):
                 self.x[i] = self.x[i-1]
@@ -148,9 +152,7 @@ class App:
         if event.type == QUIT:
             self._running = False
  
-    def on_loop(self):
-        self.player.update()
- 
+    def on_loop(self): 
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],self.player.step-1):
@@ -164,15 +166,15 @@ class App:
             if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step):
                 self.apple.x = randint(0,self.windowDimX) * self.player.step
                 self.apple.y = randint(0,self.windowDimY) * self.player.step
-                self.player.length = self.player.length + 1
-                self.player.x.append(self.player.x[-1])
-                self.player.y.append(self.player.y[-1])
+                self.player.eatenApple = True
  
         #does snake collide with wall?
         if(self.player.x[0]<0 or self.player.x[0]>self.windowWidth or self.player.y[0]<0 or self.player.y[0]>self.windowHeight):
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
             exit(0)
+
+        self.player.update()
         pass
 
     def on_render(self):
