@@ -1,9 +1,9 @@
 # problems to fix:
-# initialized length is 5?
-# apple disappears
-# when snake on left or top of apple can eat it without being on it directly?
-# if starting game on length 3 only crashes on wall if you have 2 blocks on game board- should crash directly on the 1st block that touches wall
-# you can't go back into yourself to die
+# initialized length is 5???
+# apple disappears? fixed
+# when snake on left or top of apple can eat it without being on it directly? fixed
+# if starting game on length 3 only crashes on wall if you have 2 blocks on game board- should crash directly on the 1st block that touches wall? 
+# you can't go back into yourself to die-
 
 from pygame.locals import *
 from random import randint
@@ -127,15 +127,31 @@ class Game:
         if x1 == x2 and y1==y2:
             return True
         return False
+
+class Toolbar:
+    toolbarWidth = 0
+    windowWidth = 0
+    windowHeight = 0
+    def __init__(self, width, windoww,windowh):
+        self.toolbarWidth = width
+        self.windowWidth = windoww
+        self.windowHeight = windowh
+    def draw(self, display, direction, imgs):
+        pygame.draw.rect (display, (255,255,255), ((self.windowWidth,0,self.toolbarWidth, self.windowHeight))) # draws a white rectangle to make the toolbar look different from the board
+        image = pygame.transform.scale(imgs[direction],(int(self.toolbarWidth/2),int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
+        display.blit(image,(int(self.windowWidth+self.toolbarWidth/4),int(self.windowHeight/8))) #blit it so it renders
+        
+
  
 class App:
- 
     windowDimY = 14
     windowDimX = 18
     windowWidth = 0
     windowHeight = 0
+    toolbarWidth = 400
     player = 0
     apple = 0
+    toolbar = 0
  
     def __init__(self):
         self._running = True
@@ -146,16 +162,22 @@ class App:
         self.player = Player(3,self.windowDimX, self.windowDimY) 
         self.windowWidth = self.windowDimX*self.player.step
         self.windowHeight = self.windowDimY*self.player.step
+        self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(5,5)
  
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode((self.windowWidth,self.windowHeight), pygame.HWSURFACE)
- 
+        self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
         pygame.display.set_caption('Pygame Snake game!')
         self._running = True
         self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
         self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
+        self._direction_images = []
+        self._direction_images.append(pygame.image.load("images/dpad/dpad_right.png").convert())
+        self._direction_images.append(pygame.image.load("images/dpad/dpad_left.png").convert())
+        self._direction_images.append(pygame.image.load("images/dpad/dpad_up.png").convert())
+        self._direction_images.append(pygame.image.load("images/dpad/dpad_down.png").convert())
+        
  
     def on_event(self, event):
         if event.type == QUIT:
@@ -173,8 +195,8 @@ class App:
         # does snake eat apple?
         for i in range(0,self.player.length):
             if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step-1):
-                self.apple.x = randint(0,self.windowDimX) * self.player.step
-                self.apple.y = randint(0,self.windowDimY) * self.player.step
+                self.apple.x = randint(0,self.windowDimX-1) * self.player.step
+                self.apple.y = randint(0,self.windowDimY-1) * self.player.step
                 print("apple x=",self.apple.x,"apple y=",self.apple.y)
                 self.player.eatenApple = True
  
@@ -191,6 +213,7 @@ class App:
         self._display_surf.fill((0,0,0))
         self.player.draw(self._display_surf, self._image_surf)
         self.apple.draw(self._display_surf, self._apple_surf)
+        self.toolbar.draw(self._display_surf, self.player.direction, self._direction_images)
         pygame.display.flip()
  
     def on_cleanup(self):
