@@ -1,7 +1,28 @@
+# PROBLEM: player doesn't start fresh every episode- needs to be in new position, keeps just killing itself
+
 from pygame.locals import *
 from random import randint
 import pygame
 import time
+from dqn import dqnagent
+import numpy as np
+ 
+def parameters():
+    params = dict()
+    params['epsilon_decay_linear'] = 1/175 #how much we decrease our exploration by every time
+    params['learning_rate'] = 0.0005
+    params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
+    params['second_layer_size'] = 150
+    params['third_layer_size'] = 150
+    params['episodes'] = 5 #how many trials you do ie played games
+    params['memory_size'] = 2500
+    params['batch_size'] = 500
+    params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
+    params['load_weights'] = False
+    params['train'] = True
+    return(params)
+
+#---
  
 class Apple:
     x = 0
@@ -89,23 +110,10 @@ class Player:
                 self.y[0] += self.step
             self.updateCount = 0
  
-    # moving in dfferent directions
-    def moveRight(self):
-        self.direction = 0
-        print("right")
- 
-    def moveLeft(self):
-        self.direction = 1
-        print("rileftght")
- 
-    def moveUp(self):
-        self.direction = 2
-        print("up")
- 
-    def moveDown(self):
-        self.direction = 3 
-        print("down")
- 
+    # agent picks the move 
+    def do_move(self,action):
+        self.direction = action
+
     #drawing the snake
     def draw(self, surface, image):
         for i in range(0,self.length):
@@ -177,13 +185,14 @@ class App:
             self._running = False
  
     def on_loop(self): 
+        crashed = False # not crashed- will it? ooh
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],self.player.step-1):
                 print("You lose! Collision with yourself: ")
                 print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
                 print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
-                exit(0)
+                self._running = False
                 
         # does snake eat apple?
         for i in range(0,self.player.length):
@@ -197,8 +206,7 @@ class App:
         if(self.player.x[0]<0 or self.player.x[0]>self.windowWidth or self.player.y[0]<0 or self.player.y[0]>self.windowHeight):
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
-            exit(0)
-
+            self._running= False
         self.player.update()
         pass
 
@@ -211,35 +219,58 @@ class App:
  
     def on_cleanup(self):
         pygame.quit()
+
+    # initializing agent before the 1st move
+    def init_agent(self, agent, player, game, food, batch_size):
+        state_init1 = agent.get_state(game,player,food) #first state after random placement
+        #first action
+        
  
     def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
- 
-        while( self._running ):
-            pygame.event.pump()
-            keys = pygame.key.get_pressed() 
- 
-            if (keys[K_RIGHT]):
-                self.player.moveRight()
- 
-            if (keys[K_LEFT]):
-                self.player.moveLeft()
- 
-            if (keys[K_UP]):
-                self.player.moveUp()
- 
-            if (keys[K_DOWN]):
-                self.player.moveDown()
- 
-            if (keys[K_ESCAPE]):
+        print('starting execution!')
+        params = parameters()
+        agent = dqnagent(params) #initialize the agent!
+        if(agent.load_weights): #load weights maybe
+            agent.model.load_weights(agent.weights)
+            print("loaded the weights")
+
+        counter = 0 #how many games have been played/trials done
+        record = 0 #highest score
+        while counter<params['episodes']: #still have more trials to do
+            counter += 1
+            if not params['train']: # if you're not training it, no need for exploration
+                agent.epsilon = 0
+            else:
+                agent.epilson = 1- (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+
+            if self.on_init() == False:
                 self._running = False
+
+            while(self._running):
+                pygame.event.pump()
+                keys = pygame.key.get_pressed() 
+                if (keys[K_ESCAPE]):
+                    self._running = False
+                oldstate = agent.get_state(self, self.player,self.apple)
+                # get the action
+                if randint(0,1)<agent.epsilon: #every so often random exploration
+                    action = randint(0,3) #random action
+                    print("random action= ",action)
+                else: #Actionprecited by agent
+                    oldstate = oldstate.reshape(1,12)
+                    predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
+                    print("predicted q-value for action= ",predictedq)
+                    action = np.argmax(predictedq[0]) #maximum (highest q) action
+                    print("predicted action= ",action)
+
+                self.player.do_move(action) #do the action
+                newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
+
+                self.on_loop()
+                self.on_render()
  
-            self.on_loop()
-            self.on_render()
- 
-            time.sleep (50.0/1000.0)
-        self.on_cleanup()
+                time.sleep (50.0/1000.0)
+            self.on_cleanup()
  
 if __name__ == "__main__" :
     theApp = App()
