@@ -32,7 +32,7 @@ class dqnagent(object):
         model.add(Dense(units = self.first_layer, activation='relu', input_dim=12)) #first layer on model, 12 inputs, ReLu activation
         model.add(Dense(units=self.second_layer, activation = 'relu')) #second layer
         model.add(Dense(units = self.third_layer, activation='relu')) #thirdlayer
-        model.add(Dense(units = 3, activation='softmax')) # last layer- 3 outputs, softmax activation
+        model.add(Dense(units = 4, activation='softmax')) # last layer- 3 outputs, softmax activation
         
         opt = Adam(self.learning_rate) #optimization to find minimum loss point
         model.compile(loss='mse',optimizer=opt) #compile model- mean squared error for difference between target and output averaged across different outputs squared

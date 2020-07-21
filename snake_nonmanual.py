@@ -49,37 +49,62 @@ class Player:
  
     def __init__(self, length, xDim, yDim):
         self.length = length #not using random yet
+
         self.direction = randint(0,3)
+
         print(self.direction)
-        # random snake position dependent on the initial direction
-        if(self.direction==0):
-            self.x.append(randint(5,xDim)*self.step)
-            self.y.append(0)
-            for i in range(1,length):
-                self.x.append(self.x[i-1]-self.step)
-                self.y.append(self.y[0])
-        elif(self.direction==1):
-            self.x.append(randint(0,xDim-5)*self.step)
-            self.y.append(0)
-            for i in range(1,length):
-                self.x.append(self.x[i-1]+self.step)
-                self.y.append(self.y[0])
-        elif(self.direction==2):
-            self.y.append(randint(5,yDim)*self.step)
-            self.x.append(0)
-            for i in range(1,length):
-                self.y.append(self.y[i-1]+self.step)
-                self.x.append(self.x[0])
-        else:
-            self.y.append(randint(0,yDim-5)*self.step)
-            self.x.append(0)
-            for i in range(1,length):
-                self.y.append(self.y[i-1]-self.step)
-                self.x.append(self.x[0])
+
+        x0 = randint(self.length, xDim-self.length)*self.step
+        y0 = randint(self.length, yDim-self.length)*self.step
+
+        self.x.append(x0)
+        self.y.append(y0)
 
         for i in range(1,length):
-            self.x.append(self.x[i-1]-self.step)
-            self.y.append(self.y[0])
+            if self.direction == 0: #right
+                self.x.append(self.x[i-1]-self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 1: #left
+                self.x.append(self.x[i-1]+self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 2: #up
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]+self.step)
+            elif self.direction == 3: #down
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]-self.step)
+
+        # self.direction = randint(0,3)
+        # print(self.direction)
+        # # random snake position dependent on the initial direction
+        # if(self.direction==0):
+        #     self.x.append(randint(5,xDim)*self.step)
+        #     self.y.append(0)
+        #     for i in range(1,length):
+        #         self.x.append(self.x[i-1]-self.step)
+        #         self.y.append(self.y[0])
+        # elif(self.direction==1):
+        #     self.x.append(randint(0,xDim-5)*self.step)
+        #     self.y.append(0)
+        #     for i in range(1,length):
+        #         self.x.append(self.x[i-1]+self.step)
+        #         self.y.append(self.y[0])
+        # elif(self.direction==2):
+        #     self.y.append(randint(5,yDim)*self.step)
+        #     self.x.append(0)
+        #     for i in range(1,length):
+        #         self.y.append(self.y[i-1]+self.step)
+        #         self.x.append(self.x[0])
+        # else:
+        #     self.y.append(randint(0,yDim-5)*self.step)
+        #     self.x.append(0)
+        #     for i in range(1,length):
+        #         self.y.append(self.y[i-1]-self.step)
+        #         self.x.append(self.x[0])
+
+        # for i in range(1,length):
+        #     self.x.append(self.x[i-1]-self.step)
+        #     self.y.append(self.y[0])
        # initial positions, no collision: random x and y head and body follows
         print(self.x)
         print(self.y)
@@ -164,7 +189,7 @@ class App:
         self.windowWidth = self.windowDimX*self.player.step
         self.windowHeight = self.windowDimY*self.player.step
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
-        self.apple = Apple(5,5)
+        self.apple = Apple(randint(0,self.windowDimX-1) * self.player.step, randint(0,self.windowDimY-1) * self.player.step)
  
     def on_init(self):
         pygame.init()
@@ -185,7 +210,8 @@ class App:
             self._running = False
  
     def on_loop(self): 
-        crashed = False # not crashed- will it? ooh
+        self.player.update()
+
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],self.player.step-1):
@@ -203,11 +229,10 @@ class App:
                 self.player.eatenApple = True
  
         #does snake collide with wall?
-        if(self.player.x[0]<0 or self.player.x[0]>self.windowWidth or self.player.y[0]<0 or self.player.y[0]>self.windowHeight):
+        if(self.player.x[0]<0 or self.player.x[0]>=self.windowWidth or self.player.y[0]<0 or self.player.y[0]>=self.windowHeight):
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
             self._running= False
-        self.player.update()
         pass
 
     def on_render(self):
@@ -238,38 +263,47 @@ class App:
         record = 0 #highest score
         while counter<params['episodes']: #still have more trials to do
             counter += 1
+
+            print("\nEPISODE ", counter, "\n")
+
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
                 agent.epilson = 1- (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
+            print("EPSILON = ", agent.epsilon, "\n")
+
             if self.on_init() == False:
                 self._running = False
+
+            print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
 
             while(self._running):
                 pygame.event.pump()
                 keys = pygame.key.get_pressed() 
                 if (keys[K_ESCAPE]):
-                    self._running = False
+                    exit(0)
                 oldstate = agent.get_state(self, self.player,self.apple)
+                print("\noldstate = ", oldstate, "\n")
+
                 # get the action
                 if randint(0,1)<agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
-                    print("random action= ",action)
+                    print("random action : ",action)
                 else: #Actionprecited by agent
                     oldstate = oldstate.reshape(1,12)
                     predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
-                    print("predicted q-value for action= ",predictedq)
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
-                    print("predicted action= ",action)
+                    print("predicted action : ", action, "\tq-values : ", predictedq)
 
                 self.player.do_move(action) #do the action
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
+                print("\nnewstate = ", newstate, "\n")
 
                 self.on_loop()
                 self.on_render()
  
-                time.sleep (50.0/1000.0)
+                time.sleep (200.0/1000.0)
             self.on_cleanup()
  
 if __name__ == "__main__" :

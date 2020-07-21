@@ -18,6 +18,7 @@ class Apple:
     def __init__(self,x,y):
         self.x = x * self.step
         self.y = y * self.step
+        print(x, y)
  
     def draw(self, surface, image):
         surface.blit(image,(self.x, self.y)) 
@@ -37,35 +38,56 @@ class Player:
         self.length = length #not using random yet
         self.direction = randint(0,3)
         print(self.direction)
-        # random snake position dependent on the initial direction
-        if(self.direction==0):
-            self.x.append(randint(5,xDim)*self.step)
-            self.y.append(0)
-            for i in range(1,length):
-                self.x.append(self.x[i-1]-self.step)
-                self.y.append(self.y[0])
-        elif(self.direction==1):
-            self.x.append(randint(0,xDim-5)*self.step)
-            self.y.append(0)
-            for i in range(1,length):
-                self.x.append(self.x[i-1]+self.step)
-                self.y.append(self.y[0])
-        elif(self.direction==2):
-            self.y.append(randint(5,yDim)*self.step)
-            self.x.append(0)
-            for i in range(1,length):
-                self.y.append(self.y[i-1]+self.step)
-                self.x.append(self.x[0])
-        else:
-            self.y.append(randint(0,yDim-5)*self.step)
-            self.x.append(0)
-            for i in range(1,length):
-                self.y.append(self.y[i-1]-self.step)
-                self.x.append(self.x[0])
+
+        x0 = randint(self.length, xDim-self.length)*self.step
+        y0 = randint(self.length, yDim-self.length)*self.step
+
+        self.x.append(x0)
+        self.y.append(y0)
 
         for i in range(1,length):
-            self.x.append(self.x[i-1]-self.step)
-            self.y.append(self.y[0])
+            if self.direction == 0: #right
+                self.x.append(self.x[i-1]-self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 1: #left
+                self.x.append(self.x[i-1]+self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 2: #up
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]+self.step)
+            elif self.direction == 3: #down
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]-self.step)
+
+        # # random snake position dependent on the initial direction
+        # if(self.direction==0):
+        #     self.x.append(randint(5,xDim)*self.step)
+        #     self.y.append(0)
+        #     for i in range(1,length):
+        #         self.x.append(self.x[i-1]-self.step)
+        #         self.y.append(self.y[0])
+        # elif(self.direction==1):
+        #     self.x.append(randint(0,xDim-5)*self.step)
+        #     self.y.append(0)
+        #     for i in range(1,length):
+        #         self.x.append(self.x[i-1]+self.step)
+        #         self.y.append(self.y[0])
+        # elif(self.direction==2):
+        #     self.y.append(randint(5,yDim)*self.step)
+        #     self.x.append(0)
+        #     for i in range(1,length):
+        #         self.y.append(self.y[i-1]+self.step)
+        #         self.x.append(self.x[0])
+        # else:
+        #     self.y.append(randint(0,yDim-5)*self.step)
+        #     self.x.append(0)
+        #     for i in range(1,length):
+        #         self.y.append(self.y[i-1]-self.step)
+        #         self.x.append(self.x[0])
+
+        # for i in range(1,length):
+        #     self.x.append(self.x[i-1]-self.step)
+        #     self.y.append(self.y[0])
        # initial positions, no collision: random x and y head and body follows
         print(self.x)
         print(self.y)
@@ -103,7 +125,7 @@ class Player:
  
     def moveLeft(self):
         self.direction = 1
-        print("rileftght")
+        print("left")
  
     def moveUp(self):
         self.direction = 2
@@ -163,7 +185,7 @@ class App:
         self.windowWidth = self.windowDimX*self.player.step
         self.windowHeight = self.windowDimY*self.player.step
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
-        self.apple = Apple(5,5)
+        self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
  
     def on_init(self):
         pygame.init()
@@ -184,6 +206,8 @@ class App:
             self._running = False
  
     def on_loop(self): 
+        self.player.update()
+
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],self.player.step-1):
@@ -201,12 +225,11 @@ class App:
                 self.player.eatenApple = True
  
         #does snake collide with wall?
-        if(self.player.x[0]<0 or self.player.x[0]>self.windowWidth or self.player.y[0]<0 or self.player.y[0]>self.windowHeight):
+        if(self.player.x[0]<0 or self.player.x[0]>=self.windowWidth or self.player.y[0]<0 or self.player.y[0]>=self.windowHeight):
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
             exit(0)
 
-        self.player.update()
         pass
 
     def on_render(self):
