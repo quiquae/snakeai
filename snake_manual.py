@@ -152,8 +152,8 @@ class App:
  
         pygame.display.set_caption('Pygame Snake game!')
         self._running = True
-        self._image_surf = pygame.image.load("images/smake.png").convert()
-        self._apple_surf = pygame.image.load("images/smapple.png").convert()
+        self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
+        self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
  
     def on_event(self, event):
         if event.type == QUIT:
