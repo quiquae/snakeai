@@ -121,9 +121,11 @@ class Player:
 class Game:
     # has a collision occured?
     def isCollision(self,x1,y1,x2,y2,bsize):
-        if x1 >= x2 and x1 <= x2 + bsize:
-            if y1 >= y2 and y1 <= y2 + bsize:
-                return True
+        # if x1 >= x2 and x1 <= x2 + bsize:
+        #     if y1 >= y2 and y1 <= y2 + bsize:
+        #         return True
+        if x1 == x2 and y1==y2:
+            return True
         return False
  
 class App:
@@ -170,9 +172,10 @@ class App:
                 
         # does snake eat apple?
         for i in range(0,self.player.length):
-            if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step):
+            if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step-1):
                 self.apple.x = randint(0,self.windowDimX) * self.player.step
                 self.apple.y = randint(0,self.windowDimY) * self.player.step
+                print("apple x=",self.apple.x,"apple y=",self.apple.y)
                 self.player.eatenApple = True
  
         #does snake collide with wall?
