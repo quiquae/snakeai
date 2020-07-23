@@ -166,7 +166,7 @@ class Toolbar:
         self.toolbarX = windowWidth
 
     def draw_background(self, display):
-        pygame.draw.rect (display, (0,255,255), (self.toolbarX, 0, self.toolbarWidth, self.toolbarHeight)) # draws a white rectangle to make the toolbar look different from the boar
+        pygame.draw.rect (display, (255,255,255), (self.toolbarX, 0, self.toolbarWidth, self.toolbarHeight)) # draws a white rectangle to make the toolbar look different from the boar
     
     def draw_dpad(self, display, direction): 
         img = self.images['dpad'][direction]   
@@ -176,18 +176,20 @@ class Toolbar:
     def draw_food(self, display):
         pass
 
-    def draw_danger(self, display, state):
+    def draw_danger(self, display):
+        state = [0,1,0,1,1,1,1,1,1,1,1,1]
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
             img = self.images['danger'][idx]
             img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
-            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/4))) #blit it so it renders
+            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/2))) #blit it so it renders
 
     def draw(self, display, direction):
         self.draw_background(display)
         self.draw_dpad(display, direction)
         #self.draw_danger(display, state)
+        self.draw_danger(display)
     
     def load_images(self):
         self.images = {
