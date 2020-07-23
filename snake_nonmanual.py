@@ -229,10 +229,11 @@ class App:
         self._display_surf = None
         self._image_surf = None
         self._apple_surf = None
-        self.game = Game()
-        self.player = Player(3,self.windowDimX, self.windowDimY) 
         self.windowWidth = self.windowDimX*self.player.step
         self.windowHeight = self.windowDimY*self.player.step
+
+        self.game = Game()
+        self.player = Player(3,self.windowDimX, self.windowDimY) 
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
  
@@ -273,6 +274,7 @@ class App:
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
             self._running= False
+        
         pass
 
     def on_render(self):
@@ -286,8 +288,8 @@ class App:
         pygame.quit()
 
     # initializing agent before the 1st move
-    def init_agent(self, agent, player, game, food, batch_size):
-        state_init1 = agent.get_state(game,player,food) #first state after random placement
+    def init_agent(self, agent):
+        state_init1 = agent.get_state(game, self.player, self.food) #first state after random placement
         #first action
         
  
@@ -323,11 +325,11 @@ class App:
                 keys = pygame.key.get_pressed() 
                 if (keys[K_ESCAPE]):
                     exit(0)
-                oldstate = agent.get_state(self, self.player,self.apple)
+                oldstate = agent.get_state(self, self.player, self.apple)
                 print("\noldstate = ", oldstate, "\n")
 
                 # get the action
-                if randint(0,1)<agent.epsilon: #every so often random exploration
+                if randint(0,1) < agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
                     print("random action : ",action)
                 else: #Actionprecited by agent
