@@ -109,32 +109,60 @@ class Player:
        # initial positions, no collision: random x and y head and body follows
         print(self.x)
         print(self.y)
+    def reset(self, length, xDim, yDim):
+        self.length = length #not using random yet
+        self.x = []
+        self.y = []
+        self.direction = randint(0,3)
+
+        print(self.direction)
+
+        x0 = randint(self.length, xDim-self.length)*self.step
+        y0 = randint(self.length, yDim-self.length)*self.step
+
+        self.x.append(x0)
+        self.y.append(y0)
+
+        for i in range(1,length):
+            if self.direction == 0: #right
+                self.x.append(self.x[i-1]-self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 1: #left
+                self.x.append(self.x[i-1]+self.step)
+                self.y.append(self.y[0])
+            elif self.direction == 2: #up
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]+self.step)
+            elif self.direction == 3: #down
+                self.x.append(self.x[0])
+                self.y.append(self.y[i-1]-self.step)
+
 
  
     def update(self):
  
-        self.updateCount = self.updateCount + 1
-        if self.updateCount > self.updateCountMax: #don't want it to update many times based on 1 action/key press
-            if(self.eatenApple):
-                self.length = self.length + 1
-                self.x.append(self.x[-1])
-                self.y.append(self.y[-1])
-                self.eatenApple = False
-            # update position to be the previouis one
-            for i in range(self.length-1,0,-1):
-                self.x[i] = self.x[i-1]
-                self.y[i] = self.y[i-1]
- 
-            # update position of head of snake based on direction, move it in that direction by step amount
-            if self.direction == 0:
-                self.x[0] += self.step
-            if self.direction == 1:
-                self.x[0] -= self.step
-            if self.direction == 2:
-                self.y[0] -= self.step
-            if self.direction == 3:
-                self.y[0] += self.step
-            self.updateCount = 0
+        # self.updateCount = self.updateCount + 1
+        # if self.updateCount > self.updateCountMax: #don't want it to update many times based on 1 action/key press
+        if(self.eatenApple):
+            self.length = self.length + 1
+            self.x.append(self.x[-1])
+            self.y.append(self.y[-1])
+            self.eatenApple = False
+        # update position to be the previouis one
+        for i in range(self.length-1,0,-1):
+            self.x[i] = self.x[i-1]
+            self.y[i] = self.y[i-1]
+
+        # update position of head of snake based on direction, move it in that direction by step amount
+        if self.direction == 0:
+            self.x[0] += self.step
+        if self.direction == 1:
+            self.x[0] -= self.step
+        if self.direction == 2:
+            self.y[0] -= self.step
+        if self.direction == 3:
+            self.y[0] += self.step
+        # self.updateCount = 0
  
     # agent picks the move 
     def do_move(self,action):
@@ -176,8 +204,9 @@ class Toolbar:
     def draw_food(self, display):
         pass
 
-    def draw_danger(self, display):
-        state = [0,1,0,1,1,1,1,1,1,1,1,1]
+    def draw_danger(self, display,state):
+        # state = [0,1,0,1,1,1,1,1,1,1,1,1]
+        print(state)
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
@@ -185,11 +214,11 @@ class Toolbar:
             img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
             display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/2))) #blit it so it renders
 
-    def draw(self, display, direction):
+    def draw(self, display, direction, state):
         self.draw_background(display)
         self.draw_dpad(display, direction)
         #self.draw_danger(display, state)
-        self.draw_danger(display)
+        self.draw_danger(display,state)
     
     def load_images(self):
         self.images = {
@@ -203,14 +232,15 @@ class Toolbar:
         self.images['dpad'].append(pygame.image.load("images/dpad/dpad_up.png").convert_alpha())
         self.images['dpad'].append(pygame.image.load("images/dpad/dpad_down.png").convert_alpha())
 
-        self.images['danger'].append(pygame.image.load("images/danger4/left_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/up_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/down_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/left_not.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/right_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/up.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/down.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
+        
 
 
  
@@ -229,11 +259,11 @@ class App:
         self._display_surf = None
         self._image_surf = None
         self._apple_surf = None
-        self.windowWidth = self.windowDimX*self.player.step
-        self.windowHeight = self.windowDimY*self.player.step
 
         self.game = Game()
-        self.player = Player(3,self.windowDimX, self.windowDimY) 
+        self.player = Player(3,self.windowDimX, self.windowDimY)
+        self.windowWidth = self.windowDimX*self.player.step
+        self.windowHeight = self.windowDimY*self.player.step 
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
  
@@ -277,11 +307,11 @@ class App:
         
         pass
 
-    def on_render(self):
+    def on_render(self, state):
         self._display_surf.fill((0,0,0))
         self.player.draw(self._display_surf, self._image_surf)
         self.apple.draw(self._display_surf, self._apple_surf)
-        self.toolbar.draw(self._display_surf, self.player.direction)
+        self.toolbar.draw(self._display_surf, self.player.direction, state)
         pygame.display.flip()
  
     def on_cleanup(self):
@@ -292,7 +322,11 @@ class App:
         state_init1 = agent.get_state(game, self.player, self.food) #first state after random placement
         #first action
         
- 
+    def reset_player(self):
+        self.player = Player(3,self.windowDimX, self.windowDimY)
+        print(self.player.x)
+        print(self.player.y)
+
     def on_execute(self):
         print('starting execution!')
         params = parameters()
@@ -343,10 +377,11 @@ class App:
                 print("\nnewstate = ", newstate, "\n")
 
                 self.on_loop()
-                self.on_render()
- 
-                time.sleep (200.0/1000.0)
+                self.on_render(newstate)
+                time.sleep (4000.0/1000.0)
+            self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
+            
  
 if __name__ == "__main__" :
     theApp = App()

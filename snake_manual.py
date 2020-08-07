@@ -9,6 +9,7 @@ from pygame.locals import *
 from random import randint
 import pygame
 import time
+import numpy as np
  
 class Apple:
     x = 0
@@ -171,8 +172,8 @@ class Toolbar:
     def draw_food(self, display):
         pass
 
-    def draw_danger(self, display):
-        state = [0,1,0,1,1,1,1,1,1,1,1,1]
+    def draw_danger(self, display, state):
+        # state = [0,1,0,1,1,1,1,1,1,1,1,1]
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
@@ -180,10 +181,10 @@ class Toolbar:
             img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
             display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/2))) #blit it so it renders
 
-    def draw(self, display, direction):
+    def draw(self, display, direction,state):
         self.draw_background(display)
         self.draw_dpad(display, direction)
-        self.draw_danger(display)
+        self.draw_danger(display,state)
     
     def load_images(self):
         self.images = {
@@ -223,6 +224,7 @@ class App:
         self._display_surf = None
         self._image_surf = None
         self._apple_surf = None
+        
         self.game = Game()
         self.player = Player(3,self.windowDimX, self.windowDimY) 
         self.windowWidth = self.windowDimX*self.player.step
@@ -269,12 +271,61 @@ class App:
             exit(0)
 
         pass
+    def state(self):
+        updanger = False
+        downdanger = False
+        rightdanger = False
+        leftdanger = False    
+        for i in range(1,self.player.length):
+            if(self.player.x[0]==self.player.x[i]):
+                # if the head and part of body going to collide vertically
+                if(self.player.y[0]==(self.player.y[i]+self.player.step)):
+                    downdanger = True
+                if(self.player.y[0]==(self.player.y[i]-self.player.step)):
+                    updanger = True
+            if(self.player.y[0]==self.player.y[i]):
+                # if the head and part of body going to collide horizontally
+                if(self.player.x[0]==(self.player.x[i]+self.player.step)):
+                    leftdanger = True
+                if(self.player.x[0]==(self.player.x[i]-self.player.step)):
+                    rightdanger = True
+        if(self.player.y[0]==self.player.step): #bang downwards
+            downdanger = True
+        if(self.player.y[0]==(self.windowHeight-self.player.step)): #bang upwards
+            updanger = True
+        if(self.player.x[0]==self.player.step): #bang left
+            leftdanger = True
+        if(self.player.x[0]==(self.windowWidth-self.player.step)): #bang rightwards
+            rightdanger = True
+        state = [
+            ## detecting whether there's a blockage/danger in all ofthe directions
+            updanger,
+            downdanger,
+            leftdanger,
+            rightdanger,
+
+            self.player.direction == 0, #right
+            self.player.direction == 1, #left
+            self.player.direction == 2, #up
+            self.player.direction == 3, #down
+
+            self.apple.x < self.player.x[0], #food is to the left of the player
+            self.apple.x > self.player.x[0], #food is to the right of the player
+            self.apple.y < self.player.y[0], #food is up from the player
+            self.apple.y > self.player.y[0] #food is down from the player 
+        ]
+        for i in range(len(state)): #convert list to 0s and 1s
+            if(state[i]):
+                state[i] = 1
+            else:
+                state[i]=0
+            return np.asarray(state)
 
     def on_render(self):
         self._display_surf.fill((0,0,0))
         self.player.draw(self._display_surf, self._image_surf)
         self.apple.draw(self._display_surf, self._apple_surf)
-        self.toolbar.draw(self._display_surf, self.player.direction)
+        self.toolbar.draw(self._display_surf, self.player.direction,self.state())
         pygame.display.flip()
  
     def on_cleanup(self):
