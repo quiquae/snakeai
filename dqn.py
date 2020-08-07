@@ -49,22 +49,22 @@ class dqnagent(object):
             if(player.x[0]==player.x[i]):
                 # if the head and part of body going to collide vertically
                 if(player.y[0]==(player.y[i]+player.step)):
-                    downdanger = True
-                if(player.y[0]==(player.y[i]-player.step)):
                     updanger = True
+                if(player.y[0]==(player.y[i]-player.step)):
+                    downdanger = True
             if(player.y[0]==player.y[i]):
                 # if the head and part of body going to collide horizontally
                 if(player.x[0]==(player.x[i]+player.step)):
                     leftdanger = True
                 if(player.x[0]==(player.x[i]-player.step)):
                     rightdanger = True
-        if(player.y[0]==player.step): #bang downwards
-            downdanger = True
-        if(player.y[0]==(app.windowHeight-player.step)): #bang upwards
+        if(player.y[0]<player.step): #bang downwards
             updanger = True
-        if(player.x[0]==player.step): #bang left
+        if(player.y[0]>=(app.windowHeight-player.step)): #bang upwards
+            downdanger = True
+        if(player.x[0]<player.step): #bang left
             leftdanger = True
-        if(player.x[0]==(app.windowWidth-player.step)): #bang rightwards
+        if(player.x[0]>=(app.windowWidth-player.step)): #bang rightwards
             rightdanger = True
         state = [
             ## detecting whether there's a blockage/danger in all ofthe directions

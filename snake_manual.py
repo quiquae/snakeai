@@ -173,7 +173,7 @@ class Toolbar:
         pass
 
     def draw_danger(self, display, state):
-        # state = [0,1,0,1,1,1,1,1,1,1,1,1]
+        print("drawdanger state ",state)
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
@@ -198,14 +198,15 @@ class Toolbar:
         self.images['dpad'].append(pygame.image.load("images/dpad/dpad_up.png").convert_alpha())
         self.images['dpad'].append(pygame.image.load("images/dpad/dpad_down.png").convert_alpha())
 
-        self.images['danger'].append(pygame.image.load("images/danger4/left_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/up_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/down_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/left_not.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/right_not.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/up.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/down.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
+        self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
+        
 
 
  
@@ -280,22 +281,22 @@ class App:
             if(self.player.x[0]==self.player.x[i]):
                 # if the head and part of body going to collide vertically
                 if(self.player.y[0]==(self.player.y[i]+self.player.step)):
-                    downdanger = True
-                if(self.player.y[0]==(self.player.y[i]-self.player.step)):
                     updanger = True
+                if(self.player.y[0]==(self.player.y[i]-self.player.step)):
+                    downdanger = True
             if(self.player.y[0]==self.player.y[i]):
                 # if the head and part of body going to collide horizontally
                 if(self.player.x[0]==(self.player.x[i]+self.player.step)):
                     leftdanger = True
                 if(self.player.x[0]==(self.player.x[i]-self.player.step)):
                     rightdanger = True
-        if(self.player.y[0]==self.player.step): #bang downwards
-            downdanger = True
-        if(self.player.y[0]==(self.windowHeight-self.player.step)): #bang upwards
+        if(self.player.y[0]<self.player.step): #bang downwards
             updanger = True
-        if(self.player.x[0]==self.player.step): #bang left
+        if(self.player.y[0]>=(self.windowHeight-self.player.step)): #bang upwards
+            downdanger = True
+        if(self.player.x[0]<self.player.step): #bang left
             leftdanger = True
-        if(self.player.x[0]==(self.windowWidth-self.player.step)): #bang rightwards
+        if(self.player.x[0]>=(self.windowWidth-self.player.step)): #bang rightwards
             rightdanger = True
         state = [
             ## detecting whether there's a blockage/danger in all ofthe directions
@@ -325,6 +326,7 @@ class App:
         self._display_surf.fill((0,0,0))
         self.player.draw(self._display_surf, self._image_surf)
         self.apple.draw(self._display_surf, self._apple_surf)
+        print(self.state())
         self.toolbar.draw(self._display_surf, self.player.direction,self.state())
         pygame.display.flip()
  
@@ -357,7 +359,7 @@ class App:
             self.on_loop()
             self.on_render()
  
-            time.sleep (50.0/1000.0)
+            time.sleep (80.0/1000.0)
         self.on_cleanup()
  
 if __name__ == "__main__" :
