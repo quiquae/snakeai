@@ -1,4 +1,6 @@
-# PROBLEM: player doesn't start fresh every episode- needs to be in new position, keeps just killing itself
+# TO DO: make it all into 1 snake where you can pick whether manual or nonmanual, 
+# training the agent- making it work
+# visual representation of food to player on toolbar 
 
 from pygame.locals import *
 from random import randint

@@ -68,8 +68,8 @@ class dqnagent(object):
             rightdanger = True
         state = [
             ## detecting whether there's a blockage/danger in all ofthe directions
-            updanger,
             downdanger,
+            updanger,
             leftdanger,
             rightdanger,
 
