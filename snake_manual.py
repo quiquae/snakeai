@@ -166,7 +166,6 @@ class Toolbar:
     
     def draw_food(self, display, state):
         print(state[8:])
-        print(state[7:])
         img_indices = [i+4*state[i+8] for i in range(0,4)]
         for idx in img_indices:
             img = self.images['food'][idx]
@@ -318,10 +317,10 @@ class App:
             self.player.direction == 2, #up
             self.player.direction == 3, #down
 
-            self.apple.x < self.player.x[0], #food is to the left of the player
-            self.apple.x > self.player.x[0], #food is to the right of the player
             self.apple.y < self.player.y[0], #food is up from the player
-            self.apple.y > self.player.y[0] #food is down from the player 
+            self.apple.y > self.player.y[0], #food is down from the player
+            self.apple.x < self.player.x[0], #food is to the left of the player
+            self.apple.x > self.player.x[0] #food is to the right of the player
         ]
         for i in range(len(state)): #convert list to 0s and 1s
             if(state[i]):

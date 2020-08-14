@@ -79,9 +79,9 @@ class dqnagent(object):
             player.direction == 3, #down
 
             food.y < player.y[0], #food is up from the player
-            food.y > player.y[0] #food is down from the player
+            food.y > player.y[0], #food is down from the player
             food.x < player.x[0], #food is to the left of the player
-            food.x > player.x[0], #food is to the right of the player
+            food.x > player.x[0] #food is to the right of the player
              
         ]
         for i in range(len(state)): #convert list to 0s and 1s
