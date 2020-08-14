@@ -1,6 +1,7 @@
 # TO DO: make it all into 1 snake where you can pick whether manual or nonmanual, 
 # training the agent- making it work
-# visual representation of food to player on toolbar 
+# visual representation of food to player on toolbar DONE
+# recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them
 
 from pygame.locals import *
 from random import randint
@@ -205,7 +206,7 @@ class Toolbar:
     
     def draw_food(self, display, state):
         
-        img_indices = [i+4*state[i-8] for i in range(0,4)]
+        img_indices = [i+4*state[i+8] for i in range(0,4)]
         for idx in img_indices:
             img = self.images['food'][idx]
             img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
