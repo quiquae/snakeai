@@ -1,9 +1,4 @@
-# problems to fix:
-# initialized length is 5???
-# apple disappears? fixed
-# when snake on left or top of apple can eat it without being on it directly? fixed
-# if starting game on length 3 only crashes on wall if you have 2 blocks on game board- should crash directly on the 1st block that touches wall? 
-# you can't go back into yourself to die-
+
 
 from pygame.locals import *
 from random import randint
@@ -169,9 +164,14 @@ class Toolbar:
         img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
         display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/8))) #blit it so it renders
     
-    def draw_food(self, display):
-        pass
-
+    def draw_food(self, display, state):
+        print(state[8:])
+        print(state[7:])
+        img_indices = [i+4*state[i+8] for i in range(0,4)]
+        for idx in img_indices:
+            img = self.images['food'][idx]
+            img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
+            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(7*self.toolbarHeight/8))) #blit it so it renders
     def draw_danger(self, display, state):
         print("drawdanger state ",state)
         img_indices = [i + 4*state[i] for i in range(0,4)]
@@ -185,6 +185,7 @@ class Toolbar:
         self.draw_background(display)
         self.draw_dpad(display, direction)
         self.draw_danger(display,state)
+        self.draw_food(display,state)
     
     def load_images(self):
         self.images = {
@@ -207,7 +208,14 @@ class Toolbar:
         self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
         
-
+        self.images['food'].append(pygame.image.load("images/food/up_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/down_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/left_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/right_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/up.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/down.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/left.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
 
  
 class App:
@@ -359,7 +367,7 @@ class App:
             self.on_loop()
             self.on_render()
  
-            time.sleep (80.0/1000.0)
+            time.sleep (800.0/1000.0)
         self.on_cleanup()
  
 if __name__ == "__main__" :

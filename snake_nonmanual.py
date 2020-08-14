@@ -203,8 +203,13 @@ class Toolbar:
         img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
         display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/8))) #blit it so it renders
     
-    def draw_food(self, display):
-        pass
+    def draw_food(self, display, state):
+        
+        img_indices = [i+4*state[i-8] for i in range(0,4)]
+        for idx in img_indices:
+            img = self.images['food'][idx]
+            img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
+            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(7*self.toolbarHeight/8))) #blit it so it renders
 
     def draw_danger(self, display,state):
         # state = [0,1,0,1,1,1,1,1,1,1,1,1]
@@ -221,6 +226,7 @@ class Toolbar:
         self.draw_dpad(display, direction)
         #self.draw_danger(display, state)
         self.draw_danger(display,state)
+        self.draw_food(display,state)
     
     def load_images(self):
         self.images = {
@@ -242,6 +248,15 @@ class Toolbar:
         self.images['danger'].append(pygame.image.load("images/danger4/down.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
         self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
+
+        self.images['food'].append(pygame.image.load("images/food/up_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/down_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/left_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/right_not.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/up.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/down.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/left.png").convert_alpha())
+        self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
         
 
 
@@ -375,12 +390,11 @@ class App:
                     print("predicted action : ", action, "\tq-values : ", predictedq)
 
                 self.player.do_move(action) #do the action
+                self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
                 print("\nnewstate = ", newstate, "\n")
-
-                self.on_loop()
                 self.on_render(newstate)
-                time.sleep (4000.0/1000.0)
+                time.sleep (400.0/1000.0)
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
             
