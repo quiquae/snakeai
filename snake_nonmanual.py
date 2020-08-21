@@ -1,7 +1,6 @@
 # TO DO: make it all into 1 snake where you can pick whether manual or nonmanual, 
 # training the agent- making it work
-# visual representation of food to player on toolbar DONE
-# recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them
+# recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them (command line- argpass or something where you can specify a parameter when you do it!)
 
 from pygame.locals import *
 from random import randint
@@ -9,6 +8,8 @@ import pygame
 import time
 from dqn import dqnagent
 import numpy as np
+import pandas as pd
+import os
  
 def parameters():
     params = dict()
@@ -17,14 +18,15 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 5 #how many trials you do ie played games
+    params['episodes'] = 2000 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
     params['load_weights'] = False
     params['train'] = True
     return(params)
-
+display = True
+printx = False
 #---
  
 class Apple:
@@ -35,7 +37,8 @@ class Apple:
     def __init__(self,x,y):
         self.x = x * self.step
         self.y = y * self.step
-        print(x, y)
+        if(printx):
+            print(x, y)
  
     def draw(self, surface, image):
         surface.blit(image,(self.x, self.y)) 
@@ -48,6 +51,7 @@ class Player:
     direction = 0
     length = 3 
     eatenApple = False
+    crashed = False
     updateCountMax = 2
     updateCount = 0
  
@@ -56,7 +60,8 @@ class Player:
 
         self.direction = randint(0,3)
 
-        print(self.direction)
+        if(printx):
+            print(self.direction)
 
         x0 = randint(self.length, xDim-self.length)*self.step
         y0 = randint(self.length, yDim-self.length)*self.step
@@ -110,15 +115,17 @@ class Player:
         #     self.x.append(self.x[i-1]-self.step)
         #     self.y.append(self.y[0])
        # initial positions, no collision: random x and y head and body follows
-        print(self.x)
-        print(self.y)
+        if(printx):
+            print(self.x)
+            print(self.y)
     def reset(self, length, xDim, yDim):
         self.length = length #not using random yet
         self.x = []
         self.y = []
         self.direction = randint(0,3)
 
-        print(self.direction)
+        if(printx):
+            print(self.direction)
 
         x0 = randint(self.length, xDim-self.length)*self.step
         y0 = randint(self.length, yDim-self.length)*self.step
@@ -214,7 +221,8 @@ class Toolbar:
 
     def draw_danger(self, display,state):
         # state = [0,1,0,1,1,1,1,1,1,1,1,1]
-        print(state)
+        if(printx):
+            print(state)
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
@@ -260,6 +268,18 @@ class Toolbar:
         self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
         
 
+class DataCollector:
+    scores = []
+    savePath = "data/"+time.strftime("%Y%m%d-%H%M%S")
+    def __init__(self):
+        if(printx):
+            print(self.savePath)
+        os.mkdir(self.savePath)
+    def addScore(self,score):
+        self.scores.append(score)
+    def saveScores(self):
+        s = pd.DataFrame(self.scores)
+        s.to_csv(self.savePath+"/scores.csv", index = False)
 
  
 class App:
@@ -271,6 +291,7 @@ class App:
     player = 0
     apple = 0
     toolbar = 0
+    datacollect = 0 
  
     def __init__(self):
         self._running = True
@@ -284,44 +305,49 @@ class App:
         self.windowHeight = self.windowDimY*self.player.step 
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
+        self.dataCollect = DataCollector()
  
     def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
-        pygame.display.set_caption('Pygame Snake game!')
-        self._running = True
-        self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
-        self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
-        self.toolbar.load_images()                
+        if(display):
+            pygame.init()
+            self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
+            pygame.display.set_caption('Pygame Snake game!')
+            self._running = True
+            self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
+            self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
+            self.toolbar.load_images()                
  
     def on_event(self, event):
         if event.type == QUIT:
             self._running = False
- 
+    
     def on_loop(self): 
         self.player.update()
 
         # does snake collide with itself?
         for i in range(2,self.player.length):
             if self.game.isCollision(self.player.x[0],self.player.y[0],self.player.x[i], self.player.y[i],self.player.step-1):
-                print("You lose! Collision with yourself: ")
-                print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
-                print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
-                self._running = False
+                if(printx):
+                    print("You lose! Collision with yourself: ")
+                    print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
+                    print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
+                self.player.crashed = True
                 
         # does snake eat apple?
         for i in range(0,self.player.length):
             if self.game.isCollision(self.apple.x,self.apple.y,self.player.x[i], self.player.y[i],self.player.step-1):
                 self.apple.x = randint(0,self.windowDimX-1) * self.player.step
                 self.apple.y = randint(0,self.windowDimY-1) * self.player.step
-                print("apple x=",self.apple.x,"apple y=",self.apple.y)
+                if(printx):
+                    print("apple x=",self.apple.x,"apple y=",self.apple.y)
                 self.player.eatenApple = True
  
         #does snake collide with wall?
         if(self.player.x[0]<0 or self.player.x[0]>=self.windowWidth or self.player.y[0]<0 or self.player.y[0]>=self.windowHeight):
-            print("You lose! Collision with wall: ")
-            print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
-            self._running= False
+            if(printx):
+                print("You lose! Collision with wall: ")
+                print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
+            self.player.crashed= True
         
         pass
 
@@ -342,8 +368,9 @@ class App:
         
     def reset_player(self):
         self.player = Player(3,self.windowDimX, self.windowDimY)
-        print(self.player.x)
-        print(self.player.y)
+        if(printx):
+            print(self.player.x)
+            print(self.player.y)
 
     def on_execute(self):
         print('starting execution!')
@@ -351,53 +378,72 @@ class App:
         agent = dqnagent(params) #initialize the agent!
         if(agent.load_weights): #load weights maybe
             agent.model.load_weights(agent.weights)
-            print("loaded the weights")
+            if(printx):
+                print("loaded the weights")
 
         counter = 0 #how many games have been played/trials done
         record = 0 #highest score
         while counter<params['episodes']: #still have more trials to do
             counter += 1
 
-            print("\nEPISODE ", counter, "\n")
-
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
                 agent.epilson = 1- (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
-            print("EPSILON = ", agent.epsilon, "\n")
 
             if self.on_init() == False:
                 self._running = False
 
-            print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
+            if(printx):
+                print("\nEPISODE ", counter, "\n")
+                print("EPSILON = ", agent.epsilon, "\n")
+                print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
 
             while(self._running):
-                pygame.event.pump()
-                keys = pygame.key.get_pressed() 
-                if (keys[K_ESCAPE]):
-                    exit(0)
+                if(display):
+                    pygame.event.pump()
+                    keys = pygame.key.get_pressed() 
+                    if (keys[K_ESCAPE]):
+                        exit(0)
                 oldstate = agent.get_state(self, self.player, self.apple)
-                print("\noldstate = ", oldstate, "\n")
+                if(printx):
+                    print("\noldstate = ", oldstate, "\n")
 
                 # get the action
                 if randint(0,1) < agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
-                    print("random action : ",action)
+                    if(printx):
+                        print("random action : ",action)
                 else: #Actionprecited by agent
                     oldstate = oldstate.reshape(1,12)
                     predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
-                    print("predicted action : ", action, "\tq-values : ", predictedq)
+                    if(printx):
+                        print("predicted action : ", action, "\tq-values : ", predictedq)
 
                 self.player.do_move(action) #do the action
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
-                print("\nnewstate = ", newstate, "\n")
-                self.on_render(newstate)
-                time.sleep (400.0/1000.0)
+                reward = agent.set_reward(self.player)
+                
+                if(params['train']):
+                    agent.train_short_memory(oldstate,action, reward, newstate, self.player.crashed)
+                    agent.remember(oldstate,action, reward, newstate, self.player.crashed)
+                self._running = not(self.player.crashed)
+                if(printx):
+                    print("\nnewstate = ", newstate, "\n")
+                if(display):
+                    self.on_render(newstate)
+                    time.sleep (4.0/1000.0)
+            if(params['train']):
+                agent.replay_new(agent.memory, params['batch_size'])
+            self.dataCollect.addScore(self.player.length)
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
+        if(params['train']):
+            agent.model.save_weights(params['weights_path'])
+        self.dataCollect.saveScores()
             
  
 if __name__ == "__main__" :
