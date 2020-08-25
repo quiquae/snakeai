@@ -266,15 +266,21 @@ class Toolbar:
 
 class DataCollector:
     scores = []
+    gameLengths= []
     savePath = "data/"+time.strftime("%Y%m%d-%H%M%S")
     def __init__(self):
         print(self.savePath)
         os.mkdir(self.savePath)
     def addScore(self,score):
         self.scores.append(score)
+    def addGameLength(self,length):
+        self.gameLengths.append(length)
     def saveScores(self):
         s = pd.DataFrame(self.scores)
         s.to_csv(self.savePath+"/scores.csv", index = False)
+    def saveGameLengths(self):
+        s = pd.DataFrame(self.gameLengths)
+        s.to_csv(self.savePath+"/gameLengths.csv", index = False)
  
 class App:
     windowDimY = 14
@@ -387,8 +393,9 @@ class App:
                 self._running = False
 
             print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
-
+            duration = 0 
             while(self._running):
+                duration+=1
                 pygame.event.pump()
                 keys = pygame.key.get_pressed() 
                 if (keys[K_ESCAPE]):
@@ -409,16 +416,26 @@ class App:
                 self.player.do_move(action) #do the action
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
-                
+                reward =agent.set_reward(self.player)
+
+                if(params['train']):
+                    agent.train_short_memory(oldstate,action, reward, newstate, self.player.crashed)
+                    agent.remember(oldstate,action, reward, newstate, self.player.crashed)
                 self._running = not(self.player.crashed)
-                
                 print("\nnewstate = ", newstate, "\n")
                 self.on_render(newstate)
                 time.sleep (400.0/1000.0)
+            if(params['train']):
+                agent.replay_new(agent.memory, params['batch_size'])
             self.dataCollect.addScore(self.player.length)
+            self.dataCollect.addGameLength(duration)
+            
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
+        # if(params['train']):
+        #     agent.model.save_weights(params['weights_path'])
         self.dataCollect.saveScores()
+        self.dataCollect.saveGameLengths()
  
 if __name__ == "__main__" :
     theApp = App()

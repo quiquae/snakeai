@@ -91,9 +91,9 @@ class dqnagent(object):
                 state[i]=0
             return np.asarray(state)
 
-    def set_reward (self, player, crash): #set the rewards for different actions
+    def set_reward (self, player): #set the rewards for different actions
         self.reward = 0
-        if (crash): #punishment if you crash
+        if (player.crashed): #punishment if you crash
             self.reward = -10
             return(self.reward)
         if player.eatenApple:
