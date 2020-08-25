@@ -50,6 +50,7 @@ class Player:
     direction = 0
     length = 3 
     eatenApple = False
+    crashed = False
     updateCountMax = 2
     updateCount = 0
  
@@ -118,6 +119,7 @@ class Player:
         self.length = length #not using random yet
         self.x = []
         self.y = []
+        self.crashed = False
         self.direction = randint(0,3)
 
         print(self.direction)
@@ -321,7 +323,7 @@ class App:
                 print("You lose! Collision with yourself: ")
                 print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
                 print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + str(self.player.y[i]) + ")")
-                self._running = False
+                self.player.crashed = True
                 
         # does snake eat apple?
         for i in range(0,self.player.length):
@@ -335,7 +337,7 @@ class App:
         if(self.player.x[0]<0 or self.player.x[0]>=self.windowWidth or self.player.y[0]<0 or self.player.y[0]>=self.windowHeight):
             print("You lose! Collision with wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
-            self._running= False
+            self.player.crashed = True
         
         pass
 
@@ -407,6 +409,9 @@ class App:
                 self.player.do_move(action) #do the action
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
+                
+                self._running = not(self.player.crashed)
+                
                 print("\nnewstate = ", newstate, "\n")
                 self.on_render(newstate)
                 time.sleep (400.0/1000.0)

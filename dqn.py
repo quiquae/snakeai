@@ -96,7 +96,7 @@ class dqnagent(object):
         if (crash): #punishment if you crash
             self.reward = -10
             return(self.reward)
-        if player.eaten:
+        if player.eatenApple:
             self.reward = 10 #reward if you eat something
         return(self.reward)
     
@@ -117,11 +117,11 @@ class dqnagent(object):
             target_f[0][np.argmax(action)] = target
             self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1)
 
-    def train_short_memory(self,state,a): #training online after each decision straightaway? vs the long-term batch sampling
+    def train_short_memory(self,state,action,reward,next_state,done) : #training online after each decision straightaway? vs the long-term batch sampling
         target = reward #target is the estimation of the correct q-value
             # sets the target equal to reward or estimation of what that is if game isn't finished
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,11)))[0])
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,12)))[0])
         target_f = self.model.predict(np.array([state])) 
         target_f[0][np.argmax(action)] = target
-        self.model.fit (state.reshape((1,11)), target_f, epochs=1, verbose = 1)
+        self.model.fit (state.reshape((1,12)), target_f, epochs=1, verbose = 1)
