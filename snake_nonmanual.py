@@ -9,6 +9,8 @@ import pygame
 import time
 from dqn import dqnagent
 import numpy as np
+import pandas as pd
+import os
  
 def parameters():
     params = dict()
@@ -260,7 +262,17 @@ class Toolbar:
         self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
         
 
-
+class DataCollector:
+    scores = []
+    savePath = "data/"+time.strftime("%Y%m%d-%H%M%S")
+    def __init__(self):
+        print(self.savePath)
+        os.mkdir(self.savePath)
+    def addScore(self,score):
+        self.scores.append(score)
+    def saveScores(self):
+        s = pd.DataFrame(self.scores)
+        s.to_csv(self.savePath+"/scores.csv", index = False)
  
 class App:
     windowDimY = 14
@@ -271,6 +283,7 @@ class App:
     player = 0
     apple = 0
     toolbar = 0
+    dataCollect = 0
  
     def __init__(self):
         self._running = True
@@ -284,7 +297,8 @@ class App:
         self.windowHeight = self.windowDimY*self.player.step 
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
- 
+        self.dataCollect = DataCollector()
+
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
@@ -396,9 +410,10 @@ class App:
                 print("\nnewstate = ", newstate, "\n")
                 self.on_render(newstate)
                 time.sleep (400.0/1000.0)
+            self.dataCollect.addScore(self.player.length)
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
-            
+        self.dataCollect.saveScores()
  
 if __name__ == "__main__" :
     theApp = App()
