@@ -4,7 +4,7 @@
 # recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them
 
 from pygame.locals import *
-from random import randint
+from random import randint, random
 import pygame
 import time
 from dqn import dqnagent
@@ -377,6 +377,11 @@ class App:
 
         counter = 0 #how many games have been played/trials done
         record = 0 #highest score
+
+        #---------------------------------------------------------------------------
+        #------------------------- LOOP THRU EPISODES ------------------------------
+        #---------------------------------------------------------------------------
+
         while counter<params['episodes']: #still have more trials to do
             counter += 1
 
@@ -385,7 +390,7 @@ class App:
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
-                agent.epilson = 1- (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+                agent.epilson = 1.0 - (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
             print("EPSILON = ", agent.epsilon, "\n")
 
@@ -393,18 +398,26 @@ class App:
                 self._running = False
 
             print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
-            duration = 0 
+            duration = 0
+
+            #---------------------------------------------------------------------------
+            #--------------------------- INDIVIDUAL EPISODE ----------------------------
+            #---------------------------------------------------------------------------
+
             while(self._running):
                 duration+=1
+                print("\nMOVE : ", duration, "\n")
                 pygame.event.pump()
                 keys = pygame.key.get_pressed() 
                 if (keys[K_ESCAPE]):
                     exit(0)
                 oldstate = agent.get_state(self, self.player, self.apple)
-                print("\noldstate = ", oldstate, "\n")
+                print("\noldstate = ", oldstate)
 
-                # get the action
-                if randint(0,1) < agent.epsilon: #every so often random exploration
+
+                #--------------------------- GET AGENT ACTION ----------------------------
+                
+                if random() < agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
                     print("random action : ",action)
                 else: #Actionprecited by agent
@@ -413,25 +426,48 @@ class App:
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
                     print("predicted action : ", action, "\tq-values : ", predictedq)
 
+
+                #---------------------------- EXECUTE ACTION -----------------------------
+
                 self.player.do_move(action) #do the action
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
-                reward =agent.set_reward(self.player)
+                reward = agent.set_reward(self.player)
+                print("newstate = ", newstate)
+                print("reward = ", reward)
+                print("crashed = ", self.player.crashed, "\n")
+
+
+                #---------------------------- SHORT TRAINING -----------------------------
 
                 if(params['train']):
                     agent.train_short_memory(oldstate,action, reward, newstate, self.player.crashed)
                     agent.remember(oldstate,action, reward, newstate, self.player.crashed)
+
+
+                #------------------------------ RENDER GAME ------------------------------
+
                 self._running = not(self.player.crashed)
-                print("\nnewstate = ", newstate, "\n")
                 self.on_render(newstate)
                 time.sleep (400.0/1000.0)
+
+
+            #---------------------------------------------------------------------------
+            #----------------------- TRAINING & DATA COLLECTION ------------------------
+            #--------------------------------------------------------------------------- 
+
             if(params['train']):
                 agent.replay_new(agent.memory, params['batch_size'])
+            
             self.dataCollect.addScore(self.player.length)
             self.dataCollect.addGameLength(duration)
             
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
+
+        #---------------------------------------------------------------------------
+        #------------------------------ DATA OUTPUT --------------------------------
+        #--------------------------------------------------------------------------- 
         # if(params['train']):
         #     agent.model.save_weights(params['weights_path'])
         self.dataCollect.saveScores()

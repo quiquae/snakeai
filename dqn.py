@@ -113,8 +113,9 @@ class dqnagent(object):
             # sets the target equal to reward or estimation of what that is if game isn't finished
             if not done:
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
-            target_f = self.model.predict(np.array([state])) 
-            target_f[0][np.argmax(action)] = target
+            target_f = self.model.predict(np.array([state]))
+            target_f[0][action] = target
+            #target_f[0][np.argmax(action)] = target
             self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1)
 
     def train_short_memory(self,state,action,reward,next_state,done) : #training online after each decision straightaway? vs the long-term batch sampling
@@ -123,5 +124,9 @@ class dqnagent(object):
         if not done:
             target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,12)))[0])
         target_f = self.model.predict(np.array([state])) 
-        target_f[0][np.argmax(action)] = target
+        #target_f[0][np.argmax(action)] = target
+        #print(target_f[0][np.argmax(action)])
+        #print(target_f[0][action])
+
+        target_f[0][action] = target
         self.model.fit (state.reshape((1,12)), target_f, epochs=1, verbose = 1)
