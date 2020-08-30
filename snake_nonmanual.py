@@ -19,7 +19,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 5 #how many trials you do ie played games
+    params['episodes'] = 175 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
@@ -384,6 +384,7 @@ class App:
 
         while counter<params['episodes']: #still have more trials to do
             counter += 1
+            print(counter)
 
             print("\nEPISODE ", counter, "\n")
 
@@ -416,7 +417,7 @@ class App:
 
 
                 #--------------------------- GET AGENT ACTION ----------------------------
-                
+
                 if random() < agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
                     print("random action : ",action)
@@ -448,8 +449,8 @@ class App:
                 #------------------------------ RENDER GAME ------------------------------
 
                 self._running = not(self.player.crashed)
-                self.on_render(newstate)
-                time.sleep (400.0/1000.0)
+                #self.on_render(newstate)
+                #time.sleep (400.0/1000.0)
 
 
             #---------------------------------------------------------------------------
