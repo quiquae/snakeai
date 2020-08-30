@@ -14,7 +14,7 @@ import os
  
 def parameters():
     params = dict()
-    params['epsilon_decay_linear'] = 1/175 #how much we decrease our exploration by every time
+    params['epsilon_decay_linear'] = 1/175.0 #how much we decrease our exploration by every time
     params['learning_rate'] = 0.0005
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
@@ -391,7 +391,7 @@ class App:
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
-                agent.epilson = 1.0 - (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+                agent.epsilon = 1.0 - (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
             print("EPSILON = ", agent.epsilon, "\n")
 
