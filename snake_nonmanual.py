@@ -1,7 +1,8 @@
 # TO DO: make it all into 1 snake where you can pick whether manual or nonmanual, 
 # training the agent- making it work
 # visual representation of food to player on toolbar DONE
-# recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them
+# recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them- record stats better!
+
 
 from pygame.locals import *
 from random import randint, random
@@ -19,7 +20,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 175 #how many trials you do ie played games
+    params['episodes'] = 5 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
@@ -267,20 +268,21 @@ class Toolbar:
 class DataCollector:
     scores = []
     gameLengths= []
+    epsilon = []
+    losses = []
     savePath = "data/"+time.strftime("%Y%m%d-%H%M%S")
     def __init__(self):
         print(self.savePath)
         os.mkdir(self.savePath)
-    def addScore(self,score):
+    def add(self,score,length,ep,loss):
         self.scores.append(score)
-    def addGameLength(self,length):
         self.gameLengths.append(length)
-    def saveScores(self):
-        s = pd.DataFrame(self.scores)
-        s.to_csv(self.savePath+"/scores.csv", index = False)
-    def saveGameLengths(self):
-        s = pd.DataFrame(self.gameLengths)
-        s.to_csv(self.savePath+"/gameLengths.csv", index = False)
+        self.epsilon.append(ep)
+        self.losses.append(mean(loss))
+    def save(self):
+        s = np.array((self.scores,self.gameLengths,self.epsilon,self.losses))
+        s= np.transpose(s)
+        np.savetxt(self.savePath+"/data.csv",s,delimiter=",")
  
 class App:
     windowDimY = 14
@@ -460,9 +462,10 @@ class App:
             if(params['train']):
                 agent.replay_new(agent.memory, params['batch_size'])
             
-            self.dataCollect.addScore(self.player.length)
-            self.dataCollect.addGameLength(duration)
             
+            self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
+            print(agent.history.losses.length())
+            agent.history.losses = []
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
 
@@ -471,8 +474,7 @@ class App:
         #--------------------------------------------------------------------------- 
         # if(params['train']):
         #     agent.model.save_weights(params['weights_path'])
-        self.dataCollect.saveScores()
-        self.dataCollect.saveGameLengths()
+        self.dataCollect.save()
  
 if __name__ == "__main__" :
     theApp = App()

@@ -7,6 +7,13 @@ import numpy as np
 import pandas as pd
 from operator import add 
 import collections
+from keras.callbacks import Callback
+
+class lossHistory(Callback):
+    def on_train_begin(self,logs = {}):
+        self.losses = []
+    def on_batch_end(self,batch,logs={}):
+        self.losses.append(logs.get('loss'))
 
 class dqnagent(object):
     def __init__(self,params):
@@ -26,6 +33,8 @@ class dqnagent(object):
         self.weights = params['weights_path'] #weights
         self.load_weights = params['load_weights']
         self.model = self.network() ## the network
+        self.history = lossHistory()
+    
 
     def network (self): #building the neural network
         model = Sequential() #layers all in sequential line?
@@ -128,7 +137,7 @@ class dqnagent(object):
 
             print(target_f[0][action])
             #target_f[0][np.argmax(action)] = target
-            self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1)
+            self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1, callbacks=[self.history])
             print(self.model.predict(np.array([state]))[0])
 
     def train_short_memory(self,state,action,reward,next_state,done) : #training online after each decision straightaway? vs the long-term batch sampling
