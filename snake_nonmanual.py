@@ -2,7 +2,8 @@
 # training the agent- making it work
 # visual representation of food to player on toolbar DONE
 # recording a game? option to pick which ones watcch/stats since doesnt make sense to watch all of them- record stats better!
-
+# fix the loss save file datacollector thing!!
+#making video of the snake game- save images of each screen?? record it playing every 50 games? https://stackoverflow.com/questions/6087484/how-to-capture-pygame-screen
 
 from pygame.locals import *
 from random import randint, random
