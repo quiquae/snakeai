@@ -391,7 +391,7 @@ class App:
             if not params['train']: # if you're not training it, no need for exploration
                 agent.epsilon = 0
             else:
-                agent.epsilon = 1.0 - (counter * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
+                agent.epsilon = 1.0 - ((counter -1) * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
             print("EPSILON = ", agent.epsilon, "\n")
 
