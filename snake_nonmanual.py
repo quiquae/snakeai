@@ -16,12 +16,12 @@ import os
  
 def parameters():
     params = dict()
-    params['epsilon_decay_linear'] = 1/175.0 #how much we decrease our exploration by every time
+    params['epsilon_decay_linear'] = 1/75 #how much we decrease our exploration by every time
     params['learning_rate'] = 0.0005
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 5 #how many trials you do ie played games
+    params['episodes'] = 150 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
@@ -39,7 +39,7 @@ class Apple:
     def __init__(self,x,y):
         self.x = x * self.step
         self.y = y * self.step
-        print(x, y)
+        #print(x, y)
  
     def draw(self, surface, image):
         surface.blit(image,(self.x, self.y)) 
@@ -61,7 +61,7 @@ class Player:
 
         self.direction = randint(0,3)
 
-        print(self.direction)
+        #print(self.direction)
 
         x0 = randint(self.length, xDim-self.length)*self.step
         y0 = randint(self.length, yDim-self.length)*self.step
@@ -115,8 +115,8 @@ class Player:
         #     self.x.append(self.x[i-1]-self.step)
         #     self.y.append(self.y[0])
        # initial positions, no collision: random x and y head and body follows
-        print(self.x)
-        print(self.y)
+        #print(self.x)
+        #print(self.y)
     def reset(self, length, xDim, yDim):
         self.length = length #not using random yet
         self.x = []
@@ -124,7 +124,7 @@ class Player:
         self.crashed = False
         self.direction = randint(0,3)
 
-        print(self.direction)
+        #print(self.direction)
 
         x0 = randint(self.length, xDim-self.length)*self.step
         y0 = randint(self.length, yDim-self.length)*self.step
@@ -220,7 +220,7 @@ class Toolbar:
 
     def draw_danger(self, display,state):
         # state = [0,1,0,1,1,1,1,1,1,1,1,1]
-        print(state)
+        #print(state)
         img_indices = [i + 4*state[i] for i in range(0,4)]
         
         for idx in img_indices:
@@ -273,15 +273,16 @@ class DataCollector:
     losses = []
     savePath = "data/"+time.strftime("%Y%m%d-%H%M%S")
     def __init__(self):
-        print(self.savePath)
+        #print(self.savePath)
         os.mkdir(self.savePath)
     def add(self,score,length,ep,loss):
         self.scores.append(score)
         self.gameLengths.append(length)
         self.epsilon.append(ep)
-        self.losses.append(mean(loss))
+        #self.losses.append(mean(loss))
     def save(self):
-        s = np.array((self.scores,self.gameLengths,self.epsilon,self.losses))
+        # s = np.array((self.scores,self.gameLengths,self.epsilon,self.losses))
+        s = np.array((self.scores,self.gameLengths,self.epsilon))
         s= np.transpose(s)
         np.savetxt(self.savePath+"/data.csv",s,delimiter=",")
  
@@ -367,8 +368,8 @@ class App:
         
     def reset_player(self):
         self.player = Player(3,self.windowDimX, self.windowDimY)
-        print(self.player.x)
-        print(self.player.y)
+        #print(self.player.x)
+        #print(self.player.y)
 
     def on_execute(self):
         print('starting execution!')
@@ -396,12 +397,12 @@ class App:
             else:
                 agent.epsilon = 1.0 - ((counter -1) * params['epsilon_decay_linear'])#exploration/randomness factor that decreases over time
 
-            print("EPSILON = ", agent.epsilon, "\n")
+            #print("EPSILON = ", agent.epsilon, "\n")
 
             if self.on_init() == False:
                 self._running = False
 
-            print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
+            #print("PLAYER\tx : ", self.player.x,"\ty : ", self.player.y, "\n")
             duration = 0
 
             #---------------------------------------------------------------------------
@@ -410,25 +411,25 @@ class App:
 
             while(self._running):
                 duration+=1
-                print("\nMOVE : ", duration, "\n")
+                #print("\nMOVE : ", duration, "\n")
                 pygame.event.pump()
                 keys = pygame.key.get_pressed() 
                 if (keys[K_ESCAPE]):
                     exit(0)
                 oldstate = agent.get_state(self, self.player, self.apple)
-                print("\noldstate = ", oldstate)
+                #print("\noldstate = ", oldstate)
 
 
                 #--------------------------- GET AGENT ACTION ----------------------------
 
                 if random() < agent.epsilon: #every so often random exploration
                     action = randint(0,3) #random action
-                    print("random action : ",action)
+                    #print("random action : ",action)
                 else: #Actionprecited by agent
-                    oldstate = oldstate.reshape(1,12)
-                    predictedq= agent.model.predict(oldstate) # predicts the q values for the action in that state
+                    state = oldstate.reshape(1,12)
+                    predictedq= agent.model.predict(state) # predicts the q values for the action in that state
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
-                    print("predicted action : ", action, "\tq-values : ", predictedq)
+                    #print("predicted action : ", action, "\tq-values : ", predictedq)
 
 
                 #---------------------------- EXECUTE ACTION -----------------------------
@@ -437,9 +438,9 @@ class App:
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
                 reward = agent.set_reward(self.player)
-                print("newstate = ", newstate)
-                print("reward = ", reward)
-                print("crashed = ", self.player.crashed, "\n")
+                #print("newstate = ", newstate)
+                #print("reward = ", reward)
+                #print("crashed = ", self.player.crashed, "\n")
 
 
                 #---------------------------- SHORT TRAINING -----------------------------
@@ -452,8 +453,8 @@ class App:
                 #------------------------------ RENDER GAME ------------------------------
 
                 self._running = not(self.player.crashed)
-                #self.on_render(newstate)
-                #time.sleep (400.0/1000.0)
+                self.on_render(newstate)
+                time.sleep (20.0/1000.0)
 
 
             #---------------------------------------------------------------------------
@@ -464,9 +465,10 @@ class App:
                 agent.replay_new(agent.memory, params['batch_size'])
             
             
-            self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
-            print(agent.history.losses.length())
-            agent.history.losses = []
+            # self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
+            self.dataCollect.add(self.player.length,duration,agent.epsilon, 0.0)
+            #print(agent.history.losses.length())
+            #agent.history.losses = []
             self.player.reset(3,self.windowDimX, self.windowDimY )
             self.on_cleanup()
 

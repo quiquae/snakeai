@@ -119,26 +119,28 @@ class dqnagent(object):
             minibatch = memory #batch too big so gets all of the memory
         for state, action, reward, next_state, done in minibatch: 
 
-            print(state, action, reward, next_state, done)
+            #print("\n\nprev state: ", state, "\naction: ", action, "\nreward: ", reward, "\nnext state: ", next_state, "\ncrashed: ", done)
 
             target = reward #target is the estimation of the correct q-value
             # sets the target equal to reward or estimation of what that is if game isn't finished
             if not done:
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
             
-            print(target)
+            #print("target: ", target)
             target_f = self.model.predict(np.array([state]))
 
-            print(target_f)
+            #print("Q targets old: ", target_f)
 
             target_f[0][action] = target
 
-            print(target_f)
+            #print("Q targets new: ", target_f)
 
-            print(target_f[0][action])
+            #print("target check: ", target_f[0][action])
             #target_f[0][np.argmax(action)] = target
-            self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1, callbacks=[self.history])
-            print(self.model.predict(np.array([state]))[0])
+            #self.model.fit (np.array([state]), target_f, epochs=1, verbose = 1, callbacks=[self.history])
+            self.model.fit (np.array([state]), target_f, epochs=1, verbose = 0)
+            #print("Q prediction: ", self.model.predict(np.array([state]))[0])
+            
 
     def train_short_memory(self,state,action,reward,next_state,done) : #training online after each decision straightaway? vs the long-term batch sampling
         target = reward #target is the estimation of the correct q-value
@@ -147,8 +149,8 @@ class dqnagent(object):
             target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,12)))[0])
         target_f = self.model.predict(np.array([state])) 
         #target_f[0][np.argmax(action)] = target
-        #print(target_f[0][np.argmax(action)])
-        #print(target_f[0][action])
+
+
 
         target_f[0][action] = target
-        self.model.fit (state.reshape((1,12)), target_f, epochs=1, verbose = 1)
+        self.model.fit (state.reshape((1,12)), target_f, epochs=1, verbose = 0)
