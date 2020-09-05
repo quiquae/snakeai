@@ -1,6 +1,7 @@
 from pygame.locals import *
 from random import random, randint
 import pygame
+import os
 import time
 
 from dqn import dqnagent
@@ -20,8 +21,9 @@ def parameters():
     params['episodes'] = 1 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
-    params['weights_path'] = 'weights/weights.hdf5' #file path for the weights folder
-    params['load_weights'] = False
+    params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder
+    params['weights_path_load'] = 'weights/weights.hdf5'
+    params['load_weights'] = True
     params['train'] = True
     return(params)
     
@@ -214,6 +216,7 @@ class App:
         #---------------------------------------------------------------------------
         #------------------------------ DATA OUTPUT --------------------------------
         #--------------------------------------------------------------------------- 
-        # if(params['train']):
-        #     agent.model.save_weights(params['weights_path'])
+        if(params['train']):
+             os.mkdir(params['weights_path_save'])
+             agent.model.save_weights(params['weights_path_save']+'/weights.hdf5')
         self.dataCollect.save()

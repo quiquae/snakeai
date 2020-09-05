@@ -30,7 +30,7 @@ class dqnagent(object):
         self.second_layer = params['second_layer_size']
         self.third_layer = params['third_layer_size']
         self.memory = collections.deque(maxlen=params['memory_size']) #stack/queue effecient storing memory- faster than a list!
-        self.weights = params['weights_path'] #weights
+        self.weights = params['weights_path_load'] #weights
         self.load_weights = params['load_weights']
         self.model = self.network() ## the network
         self.history = lossHistory()
