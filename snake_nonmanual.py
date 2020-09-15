@@ -4,13 +4,18 @@
 # DISPLAY IT EVERY 50?
 # MAKE IT HARDER?
 # train it on a GPU- trains much quicker!
-
+ # make a better state-- pass in a grid that goes several squares by the head? for each square indicate whether there's adanger there or not
 
 
 from app import App
-
+import argparse
 #---
  
 if __name__ == "__main__" :
-    theApp = App()
-    theApp.on_execute()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--enable-display',dest='display',action='store_true')
+    parser.add_argument("--speed", type=int, default=50)
+    args = parser.parse_args()
+    print(args)
+    theApp = App(args.display)
+    theApp.on_execute(args.speed)

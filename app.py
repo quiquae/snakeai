@@ -4,7 +4,7 @@ import pygame
 import os
 import time
 
-from dqn import dqnagent
+from dqn2 import dqnagent
 from apple import Apple
 from player import Player
 from game import Game
@@ -18,7 +18,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 1 #how many trials you do ie played games
+    params['episodes'] = 5 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder
@@ -37,8 +37,9 @@ class App:
     apple = 0
     toolbar = 0
     dataCollect = 0
+    displayq = False
  
-    def __init__(self):
+    def __init__(self,dq):
         self._running = True
         self._display_surf = None
         self._image_surf = None
@@ -51,15 +52,18 @@ class App:
         self.toolbar = Toolbar(self.toolbarWidth, self.windowWidth, self.windowHeight)
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
         self.dataCollect = DataCollector()
+        self.displayq=dq
 
     def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
-        pygame.display.set_caption('Pygame Snake game!')
+        if(self.displayq):
+            pygame.init()
+            self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
+            pygame.display.set_caption('Pygame Snake game!')
+            self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
+            self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
+            self.toolbar.load_images()
         self._running = True
-        self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
-        self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
-        self.toolbar.load_images()                
+                        
  
     def on_event(self, event):
         if event.type == QUIT:
@@ -112,7 +116,7 @@ class App:
         #print(self.player.x)
         #print(self.player.y)
 
-    def on_execute(self):
+    def on_execute(self,speed):
         print('starting execution!')
         params = parameters()
         agent = dqnagent(params) #initialize the agent!
@@ -153,10 +157,11 @@ class App:
             while(self._running):
                 duration+=1
                 #print("\nMOVE : ", duration, "\n")
-                pygame.event.pump()
-                keys = pygame.key.get_pressed() 
-                if (keys[K_ESCAPE]):
-                    exit(0)
+                if(self.displayq):
+                    pygame.event.pump()
+                    keys = pygame.key.get_pressed() 
+                    if (keys[K_ESCAPE]):
+                        exit(0)
                 oldstate = agent.get_state(self, self.player, self.apple)
                 #print("\noldstate = ", oldstate)
 
@@ -167,7 +172,7 @@ class App:
                     action = randint(0,3) #random action
                     #print("random action : ",action)
                 else: #Actionprecited by agent
-                    state = oldstate.reshape(1,12)
+                    state = oldstate.reshape(1,33)
                     predictedq= agent.model.predict(state) # predicts the q values for the action in that state
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
                     #print("predicted action : ", action, "\tq-values : ", predictedq)
@@ -175,6 +180,7 @@ class App:
 
                 #---------------------------- EXECUTE ACTION -----------------------------
 
+                print(action)
                 self.player.do_move(action) #do the action
                 self.on_loop()
                 newstate = agent.get_state(self, self.player, self.apple) #new state from the action we've taken
@@ -194,8 +200,9 @@ class App:
                 #------------------------------ RENDER GAME ------------------------------
 
                 self._running = not(self.player.crashed)
-                self.on_render(newstate)
-                time.sleep (20.0/1000.0)
+                if(self.displayq):
+                    self.on_render(newstate)
+                time.sleep (speed/1000.0)
 
 
             #---------------------------------------------------------------------------
@@ -208,6 +215,7 @@ class App:
             
             # self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
             self.dataCollect.add(self.player.length,duration,agent.epsilon, 0.0)
+            self.dataCollect.save()
             #print(agent.history.losses.length())
             #agent.history.losses = []
             self.player.reset(3,self.windowDimX, self.windowDimY )

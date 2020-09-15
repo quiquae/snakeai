@@ -183,7 +183,9 @@ class Toolbar:
     def draw(self, display, direction,state):
         self.draw_background(display)
         self.draw_dpad(display, direction)
-        self.draw_danger(display,state)
+        print("STATE")
+        print(state)
+        #self.draw_danger(display,state)
         self.draw_food(display,state)
     
     def load_images(self):
@@ -280,37 +282,32 @@ class App:
 
         pass
     def state(self):
-        updanger = False
-        downdanger = False
-        rightdanger = False
-        leftdanger = False    
-        for i in range(1,self.player.length):
-            if(self.player.x[0]==self.player.x[i]):
-                # if the head and part of body going to collide vertically
-                if(self.player.y[0]==(self.player.y[i]+self.player.step)):
-                    updanger = True
-                if(self.player.y[0]==(self.player.y[i]-self.player.step)):
-                    downdanger = True
-            if(self.player.y[0]==self.player.y[i]):
-                # if the head and part of body going to collide horizontally
-                if(self.player.x[0]==(self.player.x[i]+self.player.step)):
-                    leftdanger = True
-                if(self.player.x[0]==(self.player.x[i]-self.player.step)):
-                    rightdanger = True
-        if(self.player.y[0]<self.player.step): #bang downwards
-            updanger = True
-        if(self.player.y[0]>=(self.windowHeight-self.player.step)): #bang upwards
-            downdanger = True
-        if(self.player.x[0]<self.player.step): #bang left
-            leftdanger = True
-        if(self.player.x[0]>=(self.windowWidth-self.player.step)): #bang rightwards
-            rightdanger = True
+        grid = np.zeros((5,5),dtype=bool)
+        relativex = [int((a-self.player.x[0])/self.player.step+2) for a in self.player.x]
+        relativey = [int((a-self.player.y[0])/self.player.step+2) for a in self.player.y]
+        for x,y in zip(relativex, relativey):
+            if(x>=0 and y>=0 and x<5 and y<5):
+                grid[y,x]= True
+            
+        right = int(self.windowWidth-(self.player.x[0]/self.player.step)+2)
+        up = int(self.windowHeight-(self.player.y[0]/self.player.step)+2)
+        down = int((self.player.y[0]/self.player.step)-2)
+        left = int((self.player.x[0]/self.player.step)-2)
+
+        if(right<5 and right>=0):
+            grid[:,right:] = False
+        if(left<5 and left>=0):
+            grid[:,:left] = False
+        if(up<5 and up>=0):
+            grid[up:,:] = False
+        if(down<5 and down>=0):
+            grid[:down,:] = False
+        
+        print("GRID")
+        print(grid)
+        grid = list(grid.flatten())
+
         state = [
-            ## detecting whether there's a blockage/danger in all ofthe directions
-            updanger,
-            downdanger,
-            leftdanger,
-            rightdanger,
 
             self.player.direction == 0, #right
             self.player.direction == 1, #left
@@ -321,14 +318,16 @@ class App:
             self.apple.y > self.player.y[0], #food is down from the player
             self.apple.x < self.player.x[0], #food is to the left of the player
             self.apple.x > self.player.x[0] #food is to the right of the player
+             
         ]
+        state += grid
         for i in range(len(state)): #convert list to 0s and 1s
             if(state[i]):
                 state[i] = 1
             else:
                 state[i]=0
-            return np.asarray(state)
-
+        return np.asarray(state)
+            
     def on_render(self):
         self._display_surf.fill((0,0,0))
         self.player.draw(self._display_surf, self._image_surf)
@@ -366,7 +365,7 @@ class App:
             self.on_loop()
             self.on_render()
  
-            time.sleep (800.0/1000.0)
+            time.sleep (700.0/1000.0)
         self.on_cleanup()
  
 if __name__ == "__main__" :
