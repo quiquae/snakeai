@@ -283,27 +283,30 @@ class App:
         pass
     def state(self):
         grid = np.zeros((5,5),dtype=bool)
+        print("x=",self.player.x,"y=",self.player.y)
         relativex = [int((a-self.player.x[0])/self.player.step+2) for a in self.player.x]
         relativey = [int((a-self.player.y[0])/self.player.step+2) for a in self.player.y]
         for x,y in zip(relativex, relativey):
             if(x>=0 and y>=0 and x<5 and y<5):
                 grid[y,x]= True
-            
-        right = int(self.windowWidth-(self.player.x[0]/self.player.step)+2)
-        up = int(self.windowHeight-(self.player.y[0]/self.player.step)+2)
+        print("x",relativex, "y",relativey)
+        print("GRID before:",grid)
+
+        right = int(self.windowDimX-(self.player.x[0]/self.player.step)+2)
+        up = int(self.windowDimY-(self.player.y[0]/self.player.step)+2)
         down = int((self.player.y[0]/self.player.step)-2)
         left = int((self.player.x[0]/self.player.step)-2)
-
         if(right<5 and right>=0):
-            grid[:,right:] = False
+            grid[:,right:] = True
         if(left<5 and left>=0):
-            grid[:,:left] = False
+            grid[:,:left] = True
         if(up<5 and up>=0):
-            grid[up:,:] = False
+            grid[up:,:] = True
         if(down<5 and down>=0):
-            grid[:down,:] = False
+            grid[:down,:] = True
+        print(right,left,up,down)
         
-        print("GRID")
+        print("GRID after")
         print(grid)
         grid = list(grid.flatten())
 
