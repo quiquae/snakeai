@@ -290,20 +290,19 @@ class App:
             if(x>=0 and y>=0 and x<5 and y<5):
                 grid[y,x]= True
         print("x",relativex, "y",relativey)
-        print("GRID before:",grid)
 
         right = int(self.windowDimX-(self.player.x[0]/self.player.step)+2)
-        up = int(self.windowDimY-(self.player.y[0]/self.player.step)+2)
-        down = int((self.player.y[0]/self.player.step)-2)
-        left = int((self.player.x[0]/self.player.step)-2)
+        down = int(self.windowDimY-(self.player.y[0]/self.player.step)+2)
+        up = int((self.player.y[0]/self.player.step)+2)
+        left = int((self.player.x[0]/self.player.step)+2)
         if(right<5 and right>=0):
             grid[:,right:] = True
         if(left<5 and left>=0):
-            grid[:,:left] = True
-        if(up<5 and up>=0):
-            grid[up:,:] = True
+            grid[:,:(6-left)] = True
         if(down<5 and down>=0):
-            grid[:down,:] = True
+            grid[down:,:] = True
+        if(up<5 and up>=0):
+            grid[:(6-up),:] = True
         print(right,left,up,down)
         
         print("GRID after")
