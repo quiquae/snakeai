@@ -1,24 +1,13 @@
 
-
+from toolbar import Toolbar
+from apple import Apple
+from game import Game
 from pygame.locals import *
 from random import randint
 import pygame
 import time
 import numpy as np
- 
-class Apple:
-    x = 0
-    y = 0
-    step = 44
- 
-    def __init__(self,x,y):
-        self.x = x * self.step
-        self.y = y * self.step
-        print(x, y)
- 
-    def draw(self, surface, image):
-        surface.blit(image,(self.x, self.y)) 
- 
+dim = 5
  
 class Player:
     x = []
@@ -136,89 +125,6 @@ class Player:
         for i in range(0,self.length):
             surface.blit(image,(self.x[i],self.y[i])) 
  
-class Game:
-    # has a collision occured?
-    def isCollision(self,x1,y1,x2,y2,bsize):
-        # if x1 >= x2 and x1 <= x2 + bsize:
-        #     if y1 >= y2 and y1 <= y2 + bsize:
-        #         return True
-        if x1 == x2 and y1==y2:
-            return True
-        return False
-
-class Toolbar:
-    toolbarWidth = 0
-    toolbarHeight = 0
-    toolbarX = 0
-
-    def __init__(self, width, windowWidth,windowHeight):
-        self.toolbarWidth = width
-        self.toolbarHeight = windowHeight
-        self.toolbarX = windowWidth
-
-    def draw_background(self, display):
-        pygame.draw.rect (display, (255,255,255), (self.toolbarX, 0, self.toolbarWidth, self.toolbarHeight)) # draws a white rectangle to make the toolbar look different from the boar
-    
-    def draw_dpad(self, display, direction): 
-        img = self.images['dpad'][direction]   
-        img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
-        display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/8))) #blit it so it renders
-    
-    def draw_food(self, display, state):
-        print(state[8:])
-        img_indices = [i+4*state[i+8] for i in range(0,4)]
-        for idx in img_indices:
-            img = self.images['food'][idx]
-            img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
-            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(7*self.toolbarHeight/8))) #blit it so it renders
-    def draw_danger(self, display, state):
-        print("drawdanger state ",state)
-        img_indices = [i + 4*state[i] for i in range(0,4)]
-        
-        for idx in img_indices:
-            img = self.images['danger'][idx]
-            img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
-            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(self.toolbarHeight/2))) #blit it so it renders
-
-    def draw(self, display, direction,state):
-        self.draw_background(display)
-        self.draw_dpad(display, direction)
-        print("STATE")
-        print(state)
-        #self.draw_danger(display,state)
-        self.draw_food(display,state)
-    
-    def load_images(self):
-        self.images = {
-            'dpad' : [],
-            'danger' : [],
-            'food' : []
-        }
-
-        self.images['dpad'].append(pygame.image.load("images/dpad/dpad_right.png").convert_alpha())
-        self.images['dpad'].append(pygame.image.load("images/dpad/dpad_left.png").convert_alpha())
-        self.images['dpad'].append(pygame.image.load("images/dpad/dpad_up.png").convert_alpha())
-        self.images['dpad'].append(pygame.image.load("images/dpad/dpad_down.png").convert_alpha())
-
-        self.images['danger'].append(pygame.image.load("images/danger4/up_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/down_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/left_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right_not.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/up.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/down.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/left.png").convert_alpha())
-        self.images['danger'].append(pygame.image.load("images/danger4/right.png").convert_alpha())
-        
-        self.images['food'].append(pygame.image.load("images/food/up_not.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/down_not.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/left_not.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/right_not.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/up.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/down.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/left.png").convert_alpha())
-        self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
-
- 
 class App:
     windowDimY = 14
     windowDimX = 18
@@ -282,27 +188,28 @@ class App:
 
         pass
     def state(self):
-        grid = np.zeros((5,5),dtype=bool)
+        middle = int(dim/2)
+        grid = np.zeros((dim,dim),dtype=bool)
         print("x=",self.player.x,"y=",self.player.y)
-        relativex = [int((a-self.player.x[0])/self.player.step+2) for a in self.player.x]
-        relativey = [int((a-self.player.y[0])/self.player.step+2) for a in self.player.y]
+        relativex = [int((a-self.player.x[0])/self.player.step+middle) for a in self.player.x]
+        relativey = [int((a-self.player.y[0])/self.player.step+middle) for a in self.player.y]
         for x,y in zip(relativex, relativey):
-            if(x>=0 and y>=0 and x<5 and y<5):
+            if(x>=0 and y>=0 and x<dim and y<dim):
                 grid[y,x]= True
         print("x",relativex, "y",relativey)
 
-        right = int(self.windowDimX-(self.player.x[0]/self.player.step)+2)
-        down = int(self.windowDimY-(self.player.y[0]/self.player.step)+2)
-        up = int((self.player.y[0]/self.player.step)+2)
-        left = int((self.player.x[0]/self.player.step)+2)
-        if(right<5 and right>=0):
+        right = int(self.windowDimX-(self.player.x[0]/self.player.step)+middle)
+        down = int(self.windowDimY-(self.player.y[0]/self.player.step)+middle)
+        up = int(middle-(self.player.y[0]/self.player.step))
+        left = int(middle-(self.player.x[0]/self.player.step))
+        if(right<dim and right>=0):
             grid[:,right:] = True
-        if(left<5 and left>=0):
-            grid[:,:(6-left)] = True
-        if(down<5 and down>=0):
+        if(left<dim and left>=0):
+            grid[:,:left] = True
+        if(down<dim and down>=0):
             grid[down:,:] = True
-        if(up<5 and up>=0):
-            grid[:(6-up),:] = True
+        if(up<dim and up>=0):
+            grid[:up,:] = True
         print(right,left,up,down)
         
         print("GRID after")
