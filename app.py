@@ -3,6 +3,7 @@ from random import random, randint
 import pygame
 import os
 import time
+import numpy as np
 
 from dqn2 import dqnagent
 from apple import Apple
@@ -18,12 +19,12 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 5 #how many trials you do ie played games
+    params['episodes'] = 85 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder
     params['weights_path_load'] = 'weights/weights.hdf5'
-    params['load_weights'] = True
+    params['load_weights'] = False
     params['train'] = True
     return(params)
     
@@ -39,7 +40,7 @@ class App:
     dataCollect = 0
     displayq = False
  
-    def __init__(self,dq):
+    def __init__(self,dq,state):
         self._running = True
         self._display_surf = None
         self._image_surf = None
@@ -53,6 +54,7 @@ class App:
         self.apple = Apple(randint(0,self.windowDimX-1), randint(0,self.windowDimY-1))
         self.dataCollect = DataCollector()
         self.displayq=dq
+        self.state_size = state
 
     def on_init(self):
         if(self.displayq):
@@ -119,7 +121,7 @@ class App:
     def on_execute(self,speed):
         print('starting execution!')
         params = parameters()
-        agent = dqnagent(params) #initialize the agent!
+        agent = dqnagent(params,self.state_size) #initialize the agent!
         if(agent.load_weights): #load weights maybe
             agent.model.load_weights(agent.weights)
             print("loaded the weights")
@@ -172,7 +174,7 @@ class App:
                     action = randint(0,3) #random action
                     #print("random action : ",action)
                 else: #Actionprecited by agent
-                    state = oldstate.reshape(1,33)
+                    state = oldstate.reshape(1,self.state_size**2+8)
                     predictedq= agent.model.predict(state) # predicts the q values for the action in that state
                     action = np.argmax(predictedq[0]) #maximum (highest q) action
                     #print("predicted action : ", action, "\tq-values : ", predictedq)

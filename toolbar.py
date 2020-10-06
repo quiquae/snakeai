@@ -1,5 +1,6 @@
 import pygame
 import math
+import numpy as np
 
 class Toolbar:
     toolbarWidth = 0
@@ -21,31 +22,32 @@ class Toolbar:
     
     def draw_food(self, display, state):
         
-        img_indices = [i+4*state[i+8] for i in range(0,4)]
+        img_indices = [i+4*state[i+4] for i in range(0,4)]
         for idx in img_indices:
             img = self.images['food'][idx]
             img = pygame.transform.scale(img, (int(self.toolbarWidth/2), int(self.toolbarWidth/2))) # take image corresponding to the direction and resclae it to fit toolbar
-            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(5*self.toolbarHeight/8))) #blit it so it renders
+            display.blit(img,(int(self.toolbarX+self.toolbarWidth/4),int(3*self.toolbarHeight/4))) #blit it so it renders
 
     def draw_danger(self, display,state):
         # state = [0,1,0,1,1,1,1,1,1,1,1,1]
         #print(state)
-        img_indices = state[8:]
         sqnum = len(state)-8
         side = int(math.sqrt(sqnum))
-        size = int(self.toolbarWidth/(3*side))
-        margin = 30
-        for a in range (side):
+        grid = np.reshape(state[8:],(side,side))
+        gridwidth = 3*self.toolbarWidth/4
+        margin = int((gridwidth/side)*0.1)
+        size = int((gridwidth/side)*0.9)
+        gridxcenter = self.toolbarX+self.toolbarWidth/2
+        gridycenter = self.toolbarHeight/2
+        
+        for a in range(side):
             for b in range(side):
-                num = 5*b+a
-                if(state[num]==0):
-                    img = self.images['food'][0]
-                else:
-                    img = self.images['food'][1]
+                img = self.images['grid'][grid[b][a]]
                 img = pygame.transform.scale(img, (size,size)) # take image corresponding to the direction and resclae it to fit toolbar
-                xshift = (int(a/2)-side)*(size+margin)
-                yshift = (int(b/2)-side)*(size+margin)
-                display.blit(img,(int(self.toolbarX+self.toolbarWidth/4+xshift),int(self.toolbarHeight/3+yshift))) #blit it so it renders
+                halfside = side/2
+                xshift = (a-halfside)*(size+margin)
+                yshift = (b-halfside)*(size+margin)
+                display.blit(img,(int(gridxcenter+xshift),int(gridycenter+yshift))) #blit it so it renders
 
 
     def draw(self, display, direction, state):
@@ -59,7 +61,8 @@ class Toolbar:
         self.images = {
             'dpad' : [],
             'danger' : [],
-            'food' : []
+            'food' : [],
+            'grid':[]
         }
 
         self.images['dpad'].append(pygame.image.load("images/dpad/dpad_right.png").convert_alpha())
@@ -84,4 +87,7 @@ class Toolbar:
         self.images['food'].append(pygame.image.load("images/food/down.png").convert_alpha())
         self.images['food'].append(pygame.image.load("images/food/left.png").convert_alpha())
         self.images['food'].append(pygame.image.load("images/food/right.png").convert_alpha())
+
+        self.images['grid'].append(pygame.image.load("images/danger/false.png").convert_alpha())
+        self.images['grid'].append(pygame.image.load("images/danger/true.png").convert_alpha())
         

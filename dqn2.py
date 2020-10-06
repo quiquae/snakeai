@@ -16,7 +16,7 @@ class lossHistory(Callback):
         self.losses.append(logs.get('loss'))
 
 class dqnagent(object):
-    def __init__(self,params):
+    def __init__(self,params,state_Size):
         self.reward = 0 #reward for succeeding/failing the task
         self.gamma = 0.9 #discount rate: how much it weighs rewards in the distant future
         self.dataframe = pd.DataFrame()
@@ -32,13 +32,14 @@ class dqnagent(object):
         self.memory = collections.deque(maxlen=params['memory_size']) #stack/queue effecient storing memory- faster than a list!
         self.weights = params['weights_path_load'] #weights
         self.load_weights = params['load_weights']
+        self.dim = state_Size
         self.model = self.network() ## the network
         self.history = lossHistory()
     
 
     def network (self): #building the neural network
         model = Sequential() #layers all in sequential line?
-        model.add(Dense(units = self.first_layer, activation='relu', input_dim=33)) #first layer on model, 33 inputs, ReLu activation
+        model.add(Dense(units = self.first_layer, activation='relu', input_dim=(self.dim**2+8))) #first layer on model, 33 inputs, ReLu activation
         model.add(Dense(units=self.second_layer, activation = 'relu')) #second layer
         model.add(Dense(units = self.third_layer, activation='relu')) #thirdlayer
         model.add(Dense(units = 4, activation='softmax')) # last layer- 3 outputs, softmax activation
@@ -50,29 +51,30 @@ class dqnagent(object):
         return(model)
 
     def get_state(self,app,player,food): #returns the diferent states of the player
-        grid = np.zeros((5,5),dtype=bool)
-        relativex = [int((a-player.x[0])/player.step+2) for a in player.x]
-        relativey = [int((a-player.y[0])/player.step+2) for a in player.y]
+        middle = int(self.dim/2)
+        grid = np.zeros((self.dim,self.dim),dtype=bool)
+        print("x=",player.x,"y=",player.y)
+        relativex = [int((a-player.x[0])/player.step+middle) for a in player.x]
+        relativey = [int((a-player.y[0])/player.step+middle) for a in player.y]
         for x,y in zip(relativex, relativey):
-            if(x>=0 and y>=0 and x<5 and y<5):
+            if(x>=0 and y>=0 and x<self.dim and y<self.dim):
                 grid[y,x]= True
-            
-        right = int(app.windowWidth-(player.x[0]/player.step)+2)
-        up = int(app.windowHeight-(player.y[0]/player.step)+2)
-        down = int((player.y[0]/player.step)-2)
-        left = int((player.x[0]/player.step)-2)
 
-        if(right<5 and right>=0):
-            grid[:,right:] = False
-        if(left<5 and left>=0):
-            grid[:,:left] = False
-        if(up<5 and up>=0):
-            grid[up:,:] = False
-        if(down<5 and down>=0):
-            grid[:down,:] = False
-        
+        right = int(app.windowDimX-(player.x[0]/player.step)+middle)
+        down = int(app.windowDimY-(player.y[0]/player.step)+middle)
+        up = int(middle-(player.y[0]/player.step))
+        left = int(middle-(player.x[0]/player.step))
+        if(right<self.dim and right>=0):
+            grid[:,right:] = True
+        if(left<self.dim and left>=0):
+            grid[:,:left] = True
+        if(down<self.dim and down>=0):
+            grid[down:,:] = True
+        if(up<self.dim and up>=0):
+            grid[:up,:] = True
+
         grid = list(grid.flatten())
-        
+
         state = [
 
             player.direction == 0, #right
@@ -92,7 +94,8 @@ class dqnagent(object):
                 state[i] = 1
             else:
                 state[i]=0
-            return np.asarray(state)
+
+        return np.asarray(state)
 
     def set_reward (self, player): #set the rewards for different actions
         self.reward = 0
@@ -140,11 +143,11 @@ class dqnagent(object):
         target = reward #target is the estimation of the correct q-value
             # sets the target equal to reward or estimation of what that is if game isn't finished
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,33)))[0])
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1,(self.dim**2+8))))[0])
         target_f = self.model.predict(np.array([state])) 
         #target_f[0][np.argmax(action)] = target
 
 
 
         target_f[0][action] = target
-        self.model.fit (state.reshape((1,33)), target_f, epochs=1, verbose = 0)
+        self.model.fit (state.reshape((1,(self.dim**2+8))), target_f, epochs=1, verbose = 0)
