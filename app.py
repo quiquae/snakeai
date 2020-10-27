@@ -19,7 +19,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 200 #how many trials you do ie played games
+    params['episodes'] = 15 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder
@@ -58,15 +58,16 @@ class App:
         self.frequency = freq
 
     def on_init(self):
+        pygame.init()
         if(self.displayq):
-            pygame.init()
             self._display_surf = pygame.display.set_mode((self.windowWidth+self.toolbarWidth,self.windowHeight), pygame.HWSURFACE)
             pygame.display.set_caption('Pygame Snake game!')
             self._image_surf = pygame.image.load("images/game_objects/smake.png").convert()
             self._apple_surf = pygame.image.load("images/game_objects/smapple.png").convert()
             self.toolbar.load_images()
         self._running = True
-                        
+        # self.savepath = "frames/"+time.strftime("%Y%m%d-%H%M%S")
+        # os.mkdir(self.savepath)
  
     def on_event(self, event):
         if event.type == QUIT:
@@ -156,7 +157,7 @@ class App:
             #---------------------------------------------------------------------------
             #--------------------------- INDIVIDUAL EPISODE ----------------------------
             #---------------------------------------------------------------------------
-
+            # indexx = 0
             while(self._running):
                 if(counter%self.frequency==0):
                     self.dataCollect.record(self.player.x, self.player.y, self.apple.x, self.apple.y)
@@ -207,7 +208,11 @@ class App:
                 self._running = not(self.player.crashed)
                 if(self.displayq):
                     self.on_render(newstate)
+                # if(counter%self.frequency==0):
+                #     self.on_render(newstate)
+                #     pygame.image.save(self._display_surf,savepath+str(indexx))
                 time.sleep (speed/1000.0)
+                # indexx +=1
 
 
             #---------------------------------------------------------------------------
@@ -217,8 +222,7 @@ class App:
             if(params['train']):
                 agent.replay_new(agent.memory, params['batch_size'])
             
-            if(counter%self.frequency==0):
-                self.dataCollect.saverecord(counter)
+            
             # self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
             self.dataCollect.add(self.player.length,duration,agent.epsilon, 0.0)
             self.dataCollect.save()

@@ -8,6 +8,7 @@ import pandas as pd
 from operator import add 
 import collections
 from keras.callbacks import Callback
+import math
 
 class lossHistory(Callback):
     def on_train_begin(self,logs = {}):
@@ -82,10 +83,11 @@ class dqnagent(object):
             player.direction == 2, #up
             player.direction == 3, #down
 
-            food.y < player.y[0], #food is up from the player
-            food.y > player.y[0], #food is down from the player
+            food.x > player.x[0], #food is to the right of the player
             food.x < player.x[0], #food is to the left of the player
-            food.x > player.x[0] #food is to the right of the player
+            food.y < player.y[0], #food is up from the player
+            food.y > player.y[0] #food is down from the player
+            
              
         ]
         state += grid
@@ -105,9 +107,64 @@ class dqnagent(object):
         if player.eatenApple:
             self.reward = 10 #reward if you eat something
         return(self.reward)
+
     
+    def rotate(self, array):
+        current_state = array[0]
+        action = array[1]
+        reward = array[2]
+        next_state = array[3]
+        done = array[4]
+        states = [current_state,next_state]
+
+        for index, state in enumerate(states):
+            sqnum = len(state)-8
+            side = int(math.sqrt(sqnum))
+            grid = np.reshape(state[8:],(side,side))
+            statedirections = state[:4]
+            statefood = state[4:8]
+
+            if(statedirections[0]==1):
+                statedirections=[0,0,0,1]
+            elif(statedirections[1]==1):
+                statedirections=[0,0,1,0]
+            elif(statedirections[2]==1):
+                statedirections = [1,0,0,0]
+            else:
+                statedirections=[0,1,0,0]
+
+            temp = [0,0,0,0]
+            if(statefood[0]==1):
+                temp[3]=1
+            if(statefood[1]==1):
+                temp[2]=1
+            if(statefood[2]==1):
+                temp[0]=1
+            if(statefood[3]==1):
+                temp[1]=1
+            statefood=temp
+
+            grid=np.rot90(grid,k=-1)
+            grid = list(grid.flatten())
+            state= statedirections+statefood+grid
+            states[index] = state
+
+        if action == 0:
+            action = 3
+        if action ==1:
+            action = 2
+        if(action ==2):
+            action = 0
+        if action ==3:
+            action = 1
+        return((states[0],action, reward, states[1],done))
+
     def remember(self,state,action,reward,next_state,done): #recording your state, action, reward, next state etc - log of the different gameplay
-        self.memory.append((state,action,reward,next_state,done))
+        version = [state,action,reward,next_state,done]
+        for i in range(4):
+            self.memory.append(version)
+            version = self.rotate(version)
+            print(version)
 
     def replay_new(self,memory,batch_size): #replaying small chunks of the game history to train the model
         if len(memory) > batch_size: #more memory than size of bath
