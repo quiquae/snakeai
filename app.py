@@ -19,7 +19,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 85 #how many trials you do ie played games
+    params['episodes'] = 200 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder
@@ -40,7 +40,7 @@ class App:
     dataCollect = 0
     displayq = False
  
-    def __init__(self,dq,state):
+    def __init__(self,dq,state,freq):
         self._running = True
         self._display_surf = None
         self._image_surf = None
@@ -55,6 +55,7 @@ class App:
         self.dataCollect = DataCollector()
         self.displayq=dq
         self.state_size = state
+        self.frequency = freq
 
     def on_init(self):
         if(self.displayq):
@@ -157,6 +158,8 @@ class App:
             #---------------------------------------------------------------------------
 
             while(self._running):
+                if(counter%self.frequency==0):
+                    self.dataCollect.record(self.player.x, self.player.y, self.apple.x, self.apple.y)
                 duration+=1
                 #print("\nMOVE : ", duration, "\n")
                 if(self.displayq):
@@ -214,7 +217,8 @@ class App:
             if(params['train']):
                 agent.replay_new(agent.memory, params['batch_size'])
             
-            
+            if(counter%self.frequency==0):
+                self.dataCollect.saverecord(counter)
             # self.dataCollect.add(self.player.length,duration,agent.epsilon,agent.history.losses)
             self.dataCollect.add(self.player.length,duration,agent.epsilon, 0.0)
             self.dataCollect.save()
