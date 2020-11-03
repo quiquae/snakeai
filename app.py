@@ -19,7 +19,7 @@ def parameters():
     params['first_layer_size'] = 150 #size(nodes) of neural network layer 1
     params['second_layer_size'] = 150
     params['third_layer_size'] = 150
-    params['episodes'] = 15 #how many trials you do ie played games
+    params['episodes'] = 200 #how many trials you do ie played games
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path_save'] = 'weights/'+time.strftime("%Y%m%d-%H%M%S") #file path for the weights folder

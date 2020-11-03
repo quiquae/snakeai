@@ -151,11 +151,11 @@ class dqnagent(object):
 
         if action == 0:
             action = 3
-        if action ==1:
+        elif action ==1:
             action = 2
-        if(action ==2):
+        elif(action ==2):
             action = 0
-        if action ==3:
+        elif action ==3:
             action = 1
         return((states[0],action, reward, states[1],done))
 
@@ -164,7 +164,7 @@ class dqnagent(object):
         for i in range(4):
             self.memory.append(version)
             version = self.rotate(version)
-            print(version)
+            
 
     def replay_new(self,memory,batch_size): #replaying small chunks of the game history to train the model
         if len(memory) > batch_size: #more memory than size of bath
